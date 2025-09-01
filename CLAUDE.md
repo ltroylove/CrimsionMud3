@@ -8,10 +8,12 @@ This is a C# rewrite of Crimson-2-MUD, originally a DikuMUD/CircleMUD-based MUD 
 
 ## Original Codebase Reference
 
-The legacy C source code is preserved in `Original-Code/` for reference during the rewrite:
+The legacy C source code is preserved in `Original-Code/` for reference during the rewrite (not tracked by git):
 - `Original-Code/src/` - Original C source (30+ .c files, 20+ .h files)  
 - `Original-Code/*/lib/areas/` - Game world data files (.wld, .mob, .obj, .zon)
 - `Original-Code/controlscripts/` - Server management scripts
+
+**Note**: The Original-Code directory is excluded from version control and serves only as reference material for understanding the original MUD implementation.
 
 ## C# Project Structure
 

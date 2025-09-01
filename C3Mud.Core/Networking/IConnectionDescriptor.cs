@@ -51,14 +51,34 @@ public interface IConnectionDescriptor
     bool EchoEnabled { get; }
     
     /// <summary>
+    /// Whether this connection has pending input to process
+    /// </summary>
+    bool HasPendingInput { get; }
+    
+    /// <summary>
+    /// Telnet protocol handler for this connection
+    /// </summary>
+    ITelnetProtocolHandler TelnetHandler { get; }
+    
+    /// <summary>
     /// Send data to this connection asynchronously
     /// </summary>
     Task SendAsync(string data, CancellationToken cancellationToken = default);
     
     /// <summary>
+    /// Send data to this connection
+    /// </summary>
+    Task SendDataAsync(string data);
+    
+    /// <summary>
     /// Send data with color codes to this connection
     /// </summary>
     Task SendWithColorAsync(string colorCode, string data, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Read input from this connection
+    /// </summary>
+    Task<string> ReadInputAsync();
     
     /// <summary>
     /// Close this connection gracefully
