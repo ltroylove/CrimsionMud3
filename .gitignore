@@ -1,0 +1,11 @@
+# Ignore original C code reference directory
+Original-Code/
+
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+*.cache
+[Tt]est[Rr]esult*
+[Bb]uild[Ll]og.*
