@@ -25,6 +25,8 @@ public class ConnectionDescriptor : IConnectionDescriptor, IDisposable
     public string CurrentInput => _currentInputBuffer.ToString();
     public string LastInput { get; private set; } = string.Empty;
     public bool EchoEnabled { get; private set; } = true;
+    public bool HasPendingInput => _currentInputBuffer.Length > 0;
+    public ITelnetProtocolHandler TelnetHandler => _telnetHandler;
 
     public ConnectionDescriptor(TcpClient tcpClient, ITelnetProtocolHandler telnetHandler, string? host = null)
     {
@@ -78,6 +80,16 @@ public class ConnectionDescriptor : IConnectionDescriptor, IDisposable
     {
         var coloredMessage = $"{colorCode}{data}&N"; // Add normal color at end
         await SendAsync(coloredMessage, cancellationToken);
+    }
+
+    public async Task SendDataAsync(string data)
+    {
+        await SendAsync(data);
+    }
+
+    public async Task<string> ReadInputAsync()
+    {
+        return await Task.FromResult(ExtractCompleteInput());
     }
 
     public async Task CloseAsync()
