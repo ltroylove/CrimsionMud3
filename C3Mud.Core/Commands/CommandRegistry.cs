@@ -240,6 +240,24 @@ public class CommandRegistry : ICommandRegistry
         var lowerCommandName = commandName.ToLowerInvariant();
         _commandTypes.TryAdd(lowerCommandName, commandType);
         
+        // Also try to create command instance and register its aliases
+        try
+        {
+            if (Activator.CreateInstance(commandType) is ICommand commandInstance)
+            {
+                // Register aliases for the command
+                foreach (var alias in commandInstance.Aliases)
+                {
+                    var lowerAlias = alias.ToLowerInvariant();
+                    _aliasToCommand.TryAdd(lowerAlias, lowerCommandName);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create command instance for alias registration: {CommandType}", commandType.Name);
+        }
+        
         _logger.LogDebug("Registered command type: {CommandName} -> {CommandType}", commandName, commandType.Name);
     }
     

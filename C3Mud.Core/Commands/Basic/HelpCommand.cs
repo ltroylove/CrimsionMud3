@@ -9,7 +9,7 @@ namespace C3Mud.Core.Commands.Basic;
 public class HelpCommand : BaseCommand
 {
     public override string Name => "help";
-    public override string[] Aliases => Array.Empty<string>();
+    public override string[] Aliases => new[] { "h" };
     public override PlayerPosition MinimumPosition => PlayerPosition.Sleeping;
     public override int MinimumLevel => 1;
 
