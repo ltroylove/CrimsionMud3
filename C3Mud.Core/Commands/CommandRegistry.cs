@@ -39,11 +39,22 @@ public class CommandRegistry : ICommandRegistry
 {
     private readonly ConcurrentDictionary<string, ICommand> _commands = new();
     private readonly ConcurrentDictionary<string, ICommand> _aliases = new();
+    private readonly ConcurrentDictionary<string, Type> _commandTypes = new();
+    private readonly ConcurrentDictionary<string, string> _aliasToCommand = new();
     private readonly ILogger<CommandRegistry> _logger;
 
-    public CommandRegistry(ILogger<CommandRegistry> logger)
+    public CommandRegistry(ILogger<CommandRegistry>? logger = null)
     {
-        _logger = logger;
+        _logger = logger ?? CreateDefaultLogger();
+    }
+    
+    /// <summary>
+    /// Creates a default logger if none provided
+    /// </summary>
+    private static ILogger<CommandRegistry> CreateDefaultLogger()
+    {
+        using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+        return loggerFactory.CreateLogger<CommandRegistry>();
     }
 
     /// <summary>
@@ -210,6 +221,76 @@ public class CommandRegistry : ICommandRegistry
         }
         
         _logger.LogInformation("Auto-registered {CommandCount} command types", commandTypes.Count);
+    }
+    
+    /// <summary>
+    /// Register a command by name and type (for legacy compatibility)
+    /// </summary>
+    public void RegisterCommand(string commandName, Type commandType)
+    {
+        if (string.IsNullOrEmpty(commandName))
+            throw new ArgumentException("Command name cannot be null or empty", nameof(commandName));
+            
+        if (commandType == null)
+            throw new ArgumentNullException(nameof(commandType));
+            
+        if (!typeof(ICommand).IsAssignableFrom(commandType))
+            throw new ArgumentException("Command type must implement ICommand", nameof(commandType));
+            
+        var lowerCommandName = commandName.ToLowerInvariant();
+        _commandTypes.TryAdd(lowerCommandName, commandType);
+        
+        _logger.LogDebug("Registered command type: {CommandName} -> {CommandType}", commandName, commandType.Name);
+    }
+    
+    /// <summary>
+    /// Register a command alias
+    /// </summary>
+    public void RegisterAlias(string alias, string commandName)
+    {
+        if (string.IsNullOrEmpty(alias))
+            throw new ArgumentException("Alias cannot be null or empty", nameof(alias));
+            
+        if (string.IsNullOrEmpty(commandName))
+            throw new ArgumentException("Command name cannot be null or empty", nameof(commandName));
+            
+        var lowerAlias = alias.ToLowerInvariant();
+        var lowerCommandName = commandName.ToLowerInvariant();
+        
+        _aliasToCommand.TryAdd(lowerAlias, lowerCommandName);
+        
+        _logger.LogDebug("Registered alias: {Alias} -> {CommandName}", alias, commandName);
+    }
+    
+    /// <summary>
+    /// Resolve command type by name (with alias support)
+    /// </summary>
+    public Type? ResolveCommand(string commandName)
+    {
+        if (string.IsNullOrEmpty(commandName))
+            return null;
+            
+        var lowerCommandName = commandName.ToLowerInvariant();
+        
+        // Try direct command lookup
+        if (_commandTypes.TryGetValue(lowerCommandName, out var commandType))
+            return commandType;
+            
+        // Try alias lookup
+        if (_aliasToCommand.TryGetValue(lowerCommandName, out var actualCommandName))
+        {
+            return _commandTypes.TryGetValue(actualCommandName, out commandType) ? commandType : null;
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Get all registered aliases
+    /// </summary>
+    public Dictionary<string, string> GetAliases()
+    {
+        return new Dictionary<string, string>(_aliasToCommand);
     }
 
     private static string GetPositionDescription(PlayerPosition position)
