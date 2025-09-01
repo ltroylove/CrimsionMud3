@@ -91,6 +91,14 @@ public class AuthenticationService : IAuthenticationService
                 return AuthenticationResult.Failure("A player with that name already exists");
             }
             
+            // TODO: MISSING INTEGRATION - File system operations may fail
+            // The _playerRepository.PlayerExists() and SavePlayerAsync() calls may fail if:
+            // 1. Player file directory doesn't exist
+            // 2. File permissions are incorrect
+            // 3. Disk space issues
+            // 4. Path resolution problems
+            // Need proper error handling and directory creation
+            
             // Create legacy player data structure
             var legacyData = CreateDefaultLegacyPlayerData(username, password);
             
@@ -171,6 +179,15 @@ public class AuthenticationService : IAuthenticationService
     /// </summary>
     private (bool IsValid, string ErrorMessage) ValidatePlayerName(string playerName)
     {
+        // TODO: VALIDATION MESSAGE MISMATCH - Error messages don't match test expectations
+        // FAILING TESTS: AuthenticationServiceTests.CreatePlayerAccountAsync_InvalidUsername_ShouldRejectCreation
+        // Tests expect error messages containing "invalid" but getting specific validation messages
+        // REQUIRED FIXES:
+        // 1. Change error messages to match original MUD validation output
+        // 2. Possibly return generic "invalid" message instead of specific validation details
+        // 3. Check if tests expect exact legacy validation message format
+        // 4. Consider whether validation should be more/less strict than original
+        
         if (string.IsNullOrEmpty(playerName))
             return (false, "Player name cannot be empty");
             

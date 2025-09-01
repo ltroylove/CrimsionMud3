@@ -22,6 +22,16 @@ public class PlayerSessionManager
     /// </summary>
     public async Task<PlayerSession> AuthenticateAndCreateSessionAsync(IConnectionDescriptor connection, string username, string password)
     {
+        // TODO: MISSING INTEGRATION - Not using AuthenticationService properly
+        // FAILING TESTS: PlayerSessionIntegrationTests (multiple session-related failures)
+        // REQUIRED FIXES:
+        // 1. Integrate with actual AuthenticationService for real authentication
+        // 2. Load player data from legacy files through LegacyPlayerFileRepository
+        // 3. Handle authentication failures and return appropriate errors
+        // 4. Validate player credentials against stored password hashes
+        // 5. Set up proper session state management
+        // 6. Handle session cleanup and timeouts
+        
         // This would integrate with AuthenticationService
         // For now, create a basic implementation
         var player = new Player(Guid.NewGuid().ToString())

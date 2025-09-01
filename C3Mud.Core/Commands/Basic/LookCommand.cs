@@ -22,15 +22,28 @@ public class LookCommand : BaseCommand
         }
         else
         {
-            // Look at specific target (not implemented yet - would require world system)
+            // TODO: PLACEHOLDER - Implement looking at specific objects/players/directions
+            // REQUIRED FIXES:
+            // 1. Parse target argument (object names, player names, directions)
+            // 2. Search current room for matching objects/players
+            // 3. Display detailed descriptions for found targets
+            // 4. Handle partial name matching like original MUD
+            // 5. Show appropriate "You don't see that here" only when truly not found
             await SendToPlayerAsync(player, "You don't see that here.");
         }
     }
 
     private static async Task LookAtRoom(IPlayer player)
     {
-        // For now, send a basic room description
-        // This will be expanded when we implement the world/room system
+        // TODO: PLACEHOLDER - Replace with actual room system integration
+        // This is NOT production ready - shows hardcoded test room instead of real room data
+        // REQUIRED FIXES:
+        // 1. Integrate with World/Room system from Iteration 2 (not yet implemented)
+        // 2. Load actual room description from room data
+        // 3. Show real exits based on room connections
+        // 4. Display other players in the same room
+        // 5. Show objects/mobiles in the room
+        // 6. Apply proper ANSI color formatting
         var roomDescription = @"&WA Simple Room&N
 
 You are standing in a basic testing room. This is a placeholder room description
@@ -44,7 +57,7 @@ and the floor is made of stone.
 
         await SendToPlayerAsync(player, roomDescription, formatted: true);
         
-        // For now, just show the current player
+        // TODO: PLACEHOLDER - Show actual players in room, not just current player
         await SendToPlayerAsync(player, $"  {player.Name} is standing here.", formatted: true);
     }
 }

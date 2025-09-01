@@ -20,6 +20,17 @@ public class ScoreCommand : BaseCommand
 
     private static async Task ShowScore(IPlayer player)
     {
+        // TODO: PLACEHOLDER - Replace with real player statistics from legacy data
+        // FAILING TESTS: LegacyCommandProcessingTests.ProcessCommandAsync_ScoreCommand_ShouldShowLegacyScoreFormat
+        // Expected: Player name and "Level: 25" but showing hardcoded values
+        // REQUIRED FIXES:
+        // 1. Load actual player stats from LegacyPlayerFileData structure
+        // 2. Show real hit points, mana, move points from character data
+        // 3. Display actual experience, gold, and other stats
+        // 4. Match exact format from original MUD score output
+        // 5. Remove placeholder/development messages
+        // 6. Show equipment bonuses and stat modifiers
+        // 7. Display age, time played, and other legacy score fields
         var scoreDisplay = $@"&W
 {player.Name}'s Character Statistics:
 =====================================

@@ -57,6 +57,16 @@ public class LegacyCommandProcessor : ICommandProcessor
                 return;
             }
             
+            // TODO: MISSING BUSINESS LOGIC - No command validation or restrictions
+            // REQUIRED FUNCTIONALITY:
+            // 1. Check if player has required level for command
+            // 2. Check if player is in correct position (sitting, standing, fighting, etc.)
+            // 3. Validate command can be executed in current game state
+            // 4. Handle command cooldowns and restrictions
+            // 5. Check if player is silenced/muted
+            // 6. Validate player is not linkless/void
+            // 7. Handle immortal-only commands and permissions
+            
             _lastExecutedCommand = command;
             
             // Execute the command with original command ID (for compatibility)

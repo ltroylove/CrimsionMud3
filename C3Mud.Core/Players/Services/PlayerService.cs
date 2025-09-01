@@ -19,6 +19,19 @@ public class PlayerService : IPlayerService
     /// </summary>
     public Player ConvertFromLegacyFormat(LegacyPlayerFileData legacyData)
     {
+        // TODO: INCOMPLETE CONVERSION - Only mapping 2 fields out of 50+ available
+        // FAILING TESTS: LegacyPlayerFileFormatTests.PlayerService_ConvertToLegacyFormat_ShouldMapAllFields
+        // MISSING CONVERSIONS:
+        // 1. All ability scores (Str, Int, Wis, Dex, Con, Cha)
+        // 2. Hit points, mana, movement points
+        // 3. Experience, gold, bank balance
+        // 4. Skills array (200 skills)
+        // 5. Affected spells/conditions
+        // 6. Equipment and inventory
+        // 7. Player description, title
+        // 8. Last logon time, total played time
+        // 9. All the other 40+ fields from LegacyPlayerFileData
+        
         var playerId = Guid.NewGuid().ToString();
         var player = new Player(playerId)
         {
@@ -34,6 +47,21 @@ public class PlayerService : IPlayerService
     /// </summary>
     public LegacyPlayerFileData ConvertToLegacyFormat(Player player)
     {
+        // TODO: INCOMPLETE CONVERSION - Only setting name and level, missing all other data
+        // FAILING TESTS: LegacyPlayerFileFormatTests.PlayerService_ConvertToLegacyFormat_ShouldMapAllFields
+        // This method needs to populate ALL fields in LegacyPlayerFileData:
+        // MISSING MAPPINGS:
+        // 1. All ability scores and modifiers
+        // 2. Hit points, mana, movement (current and max)
+        // 3. Experience points and alignment
+        // 4. All 200 skills with learned percentages
+        // 5. Equipment slots and inventory items
+        // 6. Player description and title strings
+        // 7. Time-based data (birth, last logon, played time)
+        // 8. Combat data (AC, hitroll, damroll)
+        // 9. Preferences and configurations
+        // 10. All remaining 40+ fields from the original structure
+        
         var legacyData = new LegacyPlayerFileData();
         legacyData.SetName(player.Name);
         legacyData.Level = (sbyte)player.Level;

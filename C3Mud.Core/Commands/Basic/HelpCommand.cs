@@ -27,6 +27,15 @@ public class HelpCommand : BaseCommand
 
     private static async Task ShowGeneralHelp(IPlayer player)
     {
+        // TODO: PLACEHOLDER - Replace with proper help system from original MUD
+        // FAILING TESTS: LegacyCommandProcessingTests.ProcessCommandAsync_HelpCommand_ShouldShowLegacyHelpFormat
+        // Expected: "Available commands:" but getting this custom help format
+        // REQUIRED FIXES:
+        // 1. Match exact help output format from original MUD
+        // 2. Load help content from help files (like original help system)
+        // 3. Show command list in original format with proper headers
+        // 4. Remove development notes and make production-ready
+        // 5. Load from actual help database/files instead of hardcoded strings
         var generalHelp = @"&W
 C3MUD Help System
 =================

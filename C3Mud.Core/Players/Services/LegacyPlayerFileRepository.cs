@@ -16,6 +16,15 @@ public class LegacyPlayerFileRepository
     {
         _playerFilesDirectory = playerFilesDirectory ?? throw new ArgumentNullException(nameof(playerFilesDirectory));
         
+        // TODO: FILE SYSTEM INTEGRATION RISK - Directory creation may fail
+        // POTENTIAL ISSUES:
+        // 1. Insufficient permissions to create directory
+        // 2. Invalid path characters or reserved names
+        // 3. Path too long for filesystem
+        // 4. Disk space issues
+        // 5. Network drive connectivity issues
+        // MISSING: Proper error handling and logging for directory operations
+        
         // Ensure directory exists
         if (!Directory.Exists(_playerFilesDirectory))
         {
@@ -39,6 +48,15 @@ public class LegacyPlayerFileRepository
         try
         {
             var fileBytes = await File.ReadAllBytesAsync(filePath);
+            
+            // TODO: BINARY COMPATIBILITY RISK - Marshaling may fail on different platforms
+            // POTENTIAL ISSUES:
+            // 1. Struct layout differences between C and C# (padding, alignment)
+            // 2. Endianness differences on different platforms
+            // 3. File corruption or partial reads
+            // 4. Version differences in struct layout
+            // 5. Size mismatches between file and expected struct size
+            // MISSING: Validation of file size, magic numbers, version checking
             
             // Convert byte array to struct using marshaling
             var handle = GCHandle.Alloc(fileBytes, GCHandleType.Pinned);
