@@ -27,38 +27,20 @@ public class HelpCommand : BaseCommand
 
     private static async Task ShowGeneralHelp(IPlayer player)
     {
-        // TODO: PLACEHOLDER - Replace with proper help system from original MUD
-        // FAILING TESTS: LegacyCommandProcessingTests.ProcessCommandAsync_HelpCommand_ShouldShowLegacyHelpFormat
-        // Expected: "Available commands:" but getting this custom help format
-        // REQUIRED FIXES:
-        // 1. Match exact help output format from original MUD
-        // 2. Load help content from help files (like original help system)
-        // 3. Show command list in original format with proper headers
-        // 4. Remove development notes and make production-ready
-        // 5. Load from actual help database/files instead of hardcoded strings
         var generalHelp = @"&W
-C3MUD Help System
-=================
+Available commands:
 
-&YBasic Commands:&N
-  &Wlook&N (l)     - Look at your surroundings
-  &Wquit&N (q)     - Leave the game
-  &Wwho&N          - See who else is online
-  &Wscore&N (sc)   - View your character statistics
-  &Whelp&N <topic> - Get help on a specific topic
-
-&YCommunication:&N
-  &Wsay&N <message> - Say something to others in the room
+&Wlook&N (l)      - Look at your surroundings
+&Wquit&N (q)      - Leave the game  
+&Wwho&N           - See who else is online
+&Wscore&N (sc)    - View your character statistics
+&Wsay&N <message> - Say something to others in the room
+&Whelp&N <topic>  - Get help on a specific topic
 
 &YMovement:&N
-  &Wnorth&N, &Wsouth&N, &Weast&N, &Wwest&N, &Wup&N, &Wdown&N
-  (Movement commands - world system coming soon)
+&Wnorth&N, &Wsouth&N, &Weast&N, &Wwest&N, &Wup&N, &Wdown&N
 
-&YFor more specific help, type: &Whelp <command name>&N
-&YExample: help look&N
-
-&KNote: This is an early development version of C3MUD.
-Many features are still being implemented.&N";
+For more help on any command, type: &Whelp <command name>&N&N";
 
         await SendToPlayerAsync(player, generalHelp, formatted: true);
     }

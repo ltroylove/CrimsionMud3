@@ -20,17 +20,17 @@ public class ScoreCommand : BaseCommand
 
     private static async Task ShowScore(IPlayer player)
     {
-        // TODO: PLACEHOLDER - Replace with real player statistics from legacy data
-        // FAILING TESTS: LegacyCommandProcessingTests.ProcessCommandAsync_ScoreCommand_ShouldShowLegacyScoreFormat
-        // Expected: Player name and "Level: 25" but showing hardcoded values
-        // REQUIRED FIXES:
-        // 1. Load actual player stats from LegacyPlayerFileData structure
-        // 2. Show real hit points, mana, move points from character data
-        // 3. Display actual experience, gold, and other stats
-        // 4. Match exact format from original MUD score output
-        // 5. Remove placeholder/development messages
-        // 6. Show equipment bonuses and stat modifiers
-        // 7. Display age, time played, and other legacy score fields
+        var playerData = player.LegacyPlayerFileData;
+        var points = playerData.Points;
+        
+        // Format alignment description
+        var alignmentText = GetAlignmentText(playerData.Alignment);
+        
+        // Format hit point status
+        var hitStatus = GetVitalStatus(points.Hit, points.MaxHit, "health");
+        var manaStatus = GetVitalStatus(points.Mana, points.MaxMana, "mana");
+        var moveStatus = GetVitalStatus(points.Move, points.MaxMove, "moves");
+        
         var scoreDisplay = $@"&W
 {player.Name}'s Character Statistics:
 =====================================
@@ -39,17 +39,17 @@ public class ScoreCommand : BaseCommand
 &YLevel:&N    {player.Level}
 &YPosition:&N {GetPositionName(player.Position)}
 
-&GHit Points:&N    100/100   (&GFull health&N)
-&BMana Points:&N   50/50     (&BFull mana&N)  
-&YMove Points:&N   100/100   (&YFull moves&N)
+&GHit Points:&N    {points.Hit}/{points.MaxHit}   {hitStatus}
+&BMana Points:&N   {points.Mana}/{points.MaxMana}     {manaStatus}  
+&YMove Points:&N   {points.Move}/{points.MaxMove}   {moveStatus}
 
-&RExperience:&N    0
-&CAlignment:&N     Neutral (0)
+&RExperience:&N    {points.Experience}
+&CAlignment:&N     {alignmentText} ({playerData.Alignment})
+&YArmor Class:&N   {points.Armor}
+&wGold:&N         {points.Gold}
+&WBank:&N         {points.Bank}
 
-&WConnection Status:&N {(player.IsConnected ? "&GConnected&N" : "&RDisconnected&N")}
-
-&KNote: Full character statistics will be available once the
-character system is fully implemented.&N";
+&WConnection Status:&N {(player.IsConnected ? "&GConnected&N" : "&RDisconnected&N")}&N";
 
         await SendToPlayerAsync(player, scoreDisplay, formatted: true);
     }
@@ -68,6 +68,35 @@ character system is fully implemented.&N";
             PlayerPosition.Fighting => "&RFighting&N",
             PlayerPosition.Standing => "&GStanding&N",
             _ => "&KUnknown&N"
+        };
+    }
+    
+    private static string GetAlignmentText(int alignment)
+    {
+        return alignment switch
+        {
+            >= 350 => "&WSaintly&N",
+            >= 100 => "&wGood&N",
+            >= 50 => "&WKindly&N",
+            >= -49 => "&KNeutral&N",
+            >= -99 => "&rMean&N",
+            >= -349 => "&REvil&N",
+            _ => "&rSatanic&N"
+        };
+    }
+    
+    private static string GetVitalStatus(short current, short max, string type)
+    {
+        var percentage = max > 0 ? (double)current / max : 0;
+        
+        return percentage switch
+        {
+            >= 1.0 => $"(&GFull {type}&N)",
+            >= 0.8 => $"(&gGood {type}&N)",
+            >= 0.6 => $"(&YFair {type}&N)",
+            >= 0.4 => $"(&yPoor {type}&N)",
+            >= 0.2 => $"(&rBad {type}&N)",
+            _ => $"(&RAwful {type}&N)"
         };
     }
 }

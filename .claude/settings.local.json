@@ -23,7 +23,9 @@
       "Bash(cmdkey:*)",
       "Bash(git remote set-url:*)",
       "Bash(git checkout:*)",
-      "Bash(git check-ignore:*)"
+      "Bash(git check-ignore:*)",
+      "Bash(dotnet run:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

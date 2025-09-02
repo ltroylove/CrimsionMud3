@@ -64,11 +64,20 @@ public class LegacyCommandProcessingTests
         var mockPlayer = new Mock<IPlayer>();
         mockPlayer.Setup(p => p.Connection).Returns(mockConnection.Object);
         mockPlayer.Setup(p => p.Name).Returns("TestPlayer");
+        mockPlayer.Setup(p => p.CurrentRoomVnum).Returns(20385); // Set to default starting room
         
         var sentMessages = new List<string>();
         mockConnection.Setup(c => c.SendDataAsync(It.IsAny<string>()))
                      .Callback<string>(msg => sentMessages.Add(msg))
                      .Returns(Task.CompletedTask);
+        
+        // Set up player message methods to forward to connection
+        mockPlayer.Setup(p => p.SendMessageAsync(It.IsAny<string>()))
+                  .Callback<string>(msg => sentMessages.Add(msg + "\r\n"))
+                  .Returns(Task.CompletedTask);
+        mockPlayer.Setup(p => p.SendFormattedMessageAsync(It.IsAny<string>()))
+                  .Callback<string>(msg => sentMessages.Add(msg + "\r\n"))
+                  .Returns(Task.CompletedTask);
         
         // ACT
         await processor.ProcessCommandAsync(mockPlayer.Object, "look");

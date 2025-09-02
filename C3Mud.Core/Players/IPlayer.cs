@@ -1,4 +1,5 @@
 using C3Mud.Core.Networking;
+using C3Mud.Core.Players.Models;
 
 namespace C3Mud.Core.Players;
 
@@ -37,6 +38,17 @@ public interface IPlayer
     /// Player's connection descriptor
     /// </summary>
     IConnectionDescriptor? Connection { get; }
+    
+    /// <summary>
+    /// Player's current room virtual number
+    /// </summary>
+    int CurrentRoomVnum { get; set; }
+    
+    /// <summary>
+    /// Legacy player file data containing all character statistics
+    /// Used for score display and character persistence
+    /// </summary>
+    LegacyPlayerFileData LegacyPlayerFileData { get; set; }
     
     /// <summary>
     /// Send a message to the player
