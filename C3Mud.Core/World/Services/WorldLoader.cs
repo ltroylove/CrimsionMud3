@@ -13,6 +13,7 @@ public class WorldLoader
     private readonly IWorldDatabase _worldDatabase;
     private readonly IMobileDatabase _mobileDatabase;
     private readonly IObjectDatabase _objectDatabase;
+    private readonly IZoneDatabase _zoneDatabase;
     
     /// <summary>
     /// Initializes a new WorldLoader with the specified databases
@@ -20,18 +21,20 @@ public class WorldLoader
     /// <param name="worldDatabase">The world database to load room data into</param>
     /// <param name="mobileDatabase">The mobile database to load mobile data into</param>
     /// <param name="objectDatabase">The object database to load object data into</param>
-    public WorldLoader(IWorldDatabase worldDatabase, IMobileDatabase mobileDatabase, IObjectDatabase objectDatabase)
+    /// <param name="zoneDatabase">The zone database to load zone data into</param>
+    public WorldLoader(IWorldDatabase worldDatabase, IMobileDatabase mobileDatabase, IObjectDatabase objectDatabase, IZoneDatabase zoneDatabase)
     {
         _worldDatabase = worldDatabase ?? throw new ArgumentNullException(nameof(worldDatabase));
         _mobileDatabase = mobileDatabase ?? throw new ArgumentNullException(nameof(mobileDatabase));
         _objectDatabase = objectDatabase ?? throw new ArgumentNullException(nameof(objectDatabase));
+        _zoneDatabase = zoneDatabase ?? throw new ArgumentNullException(nameof(zoneDatabase));
     }
     
     /// <summary>
     /// Loads all world files from a specified directory
-    /// Processes all .wld, .mob, and .obj files found in the directory
+    /// Processes all .wld, .mob, .obj, and .zon files found in the directory
     /// </summary>
-    /// <param name="worldDirectory">Directory containing .wld, .mob, and .obj files</param>
+    /// <param name="worldDirectory">Directory containing .wld, .mob, .obj, and .zon files</param>
     /// <returns>Task representing the loading operation with loading statistics</returns>
     public async Task<WorldLoadingResult> LoadWorldFromDirectoryAsync(string worldDirectory)
     {
@@ -41,18 +44,20 @@ public class WorldLoader
         if (!Directory.Exists(worldDirectory))
             throw new DirectoryNotFoundException($"World directory not found: {worldDirectory}");
         
-        var worldFiles = Directory.GetFiles(worldDirectory, "*.wld");
-        var mobileFiles = Directory.GetFiles(worldDirectory, "*.mob");
-        var objectFiles = Directory.GetFiles(worldDirectory, "*.obj");
+        var worldFiles = Directory.GetFiles(Path.Combine(worldDirectory, "Areas"), "*.wld");
+        var mobileFiles = Directory.GetFiles(Path.Combine(worldDirectory, "Mobiles"), "*.mob");
+        var objectFiles = Directory.GetFiles(Path.Combine(worldDirectory, "Objects"), "*.obj");
+        var zoneFiles = Directory.GetFiles(Path.Combine(worldDirectory, "Zones"), "*.zon");
         
-        if (worldFiles.Length == 0 && mobileFiles.Length == 0 && objectFiles.Length == 0)
+        if (worldFiles.Length == 0 && mobileFiles.Length == 0 && objectFiles.Length == 0 && zoneFiles.Length == 0)
         {
-            throw new InvalidOperationException($"No .wld, .mob, or .obj files found in directory: {worldDirectory}");
+            throw new InvalidOperationException($"No .wld, .mob, .obj, or .zon files found in directory: {worldDirectory}");
         }
         
         int initialRoomCount = _worldDatabase.GetRoomCount();
         int initialMobileCount = _mobileDatabase.GetMobileCount();
         int initialObjectCount = _objectDatabase.ObjectCount;
+        int initialZoneCount = _zoneDatabase.GetZoneCount();
         
         // Load world files (.wld)
         foreach (var worldFile in worldFiles)
@@ -99,31 +104,53 @@ public class WorldLoader
             }
         }
         
+        // Load zone files (.zon)
+        foreach (var zoneFile in zoneFiles)
+        {
+            try
+            {
+                await _zoneDatabase.LoadZonesAsync(zoneFile);
+                Console.WriteLine($"Loaded zone file: {Path.GetFileName(zoneFile)}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading zone file {zoneFile}: {ex.Message}");
+                // Continue loading other files despite errors
+            }
+        }
+        
         int finalRoomCount = _worldDatabase.GetRoomCount();
         int finalMobileCount = _mobileDatabase.GetMobileCount();
         int finalObjectCount = _objectDatabase.ObjectCount;
+        int finalZoneCount = _zoneDatabase.GetZoneCount();
         int loadedRoomCount = finalRoomCount - initialRoomCount;
         int loadedMobileCount = finalMobileCount - initialMobileCount;
         int loadedObjectCount = finalObjectCount - initialObjectCount;
+        int loadedZoneCount = finalZoneCount - initialZoneCount;
         
         Console.WriteLine($"World loading complete. Loaded {loadedRoomCount} rooms from {worldFiles.Length} files.");
         Console.WriteLine($"Mobile loading complete. Loaded {loadedMobileCount} mobiles from {mobileFiles.Length} files.");
         Console.WriteLine($"Object loading complete. Loaded {loadedObjectCount} objects from {objectFiles.Length} files.");
+        Console.WriteLine($"Zone loading complete. Loaded {loadedZoneCount} zones from {zoneFiles.Length} files.");
         Console.WriteLine($"Total rooms in database: {finalRoomCount}");
         Console.WriteLine($"Total mobiles in database: {finalMobileCount}");
         Console.WriteLine($"Total objects in database: {finalObjectCount}");
+        Console.WriteLine($"Total zones in database: {finalZoneCount}");
         
         return new WorldLoadingResult
         {
             LoadedRooms = loadedRoomCount,
             LoadedMobiles = loadedMobileCount,
             LoadedObjects = loadedObjectCount,
+            LoadedZones = loadedZoneCount,
             TotalRooms = finalRoomCount,
             TotalMobiles = finalMobileCount,
             TotalObjects = finalObjectCount,
+            TotalZones = finalZoneCount,
             WorldFilesProcessed = worldFiles.Length,
             MobileFilesProcessed = mobileFiles.Length,
-            ObjectFilesProcessed = objectFiles.Length
+            ObjectFilesProcessed = objectFiles.Length,
+            ZoneFilesProcessed = zoneFiles.Length
         };
     }
     
@@ -167,6 +194,19 @@ public class WorldLoader
     }
     
     /// <summary>
+    /// Loads a single zone file
+    /// </summary>
+    /// <param name="zoneFilePath">Path to the .zon file to load</param>
+    /// <returns>Task representing the loading operation</returns>
+    public async Task LoadZoneFileAsync(string zoneFilePath)
+    {
+        if (string.IsNullOrWhiteSpace(zoneFilePath))
+            throw new ArgumentException("Zone file path cannot be null or empty", nameof(zoneFilePath));
+        
+        await _zoneDatabase.LoadZonesAsync(zoneFilePath);
+    }
+    
+    /// <summary>
     /// Gets statistics about the currently loaded world
     /// </summary>
     /// <returns>World loading statistics</returns>
@@ -177,6 +217,7 @@ public class WorldLoader
             TotalRooms = _worldDatabase.GetRoomCount(),
             TotalMobiles = _mobileDatabase.GetMobileCount(),
             TotalObjects = _objectDatabase.ObjectCount,
+            TotalZones = _zoneDatabase.GetZoneCount(),
             LoadedAt = DateTime.UtcNow
         };
     }
@@ -201,6 +242,11 @@ public class WorldLoadingStats
     /// Total number of object templates loaded
     /// </summary>
     public int TotalObjects { get; set; }
+    
+    /// <summary>
+    /// Total number of zones loaded
+    /// </summary>
+    public int TotalZones { get; set; }
     
     /// <summary>
     /// When the world data was loaded
@@ -229,6 +275,11 @@ public class WorldLoadingResult
     public int LoadedObjects { get; set; }
     
     /// <summary>
+    /// Number of zones loaded in this operation
+    /// </summary>
+    public int LoadedZones { get; set; }
+    
+    /// <summary>
     /// Total number of rooms after loading
     /// </summary>
     public int TotalRooms { get; set; }
@@ -244,6 +295,11 @@ public class WorldLoadingResult
     public int TotalObjects { get; set; }
     
     /// <summary>
+    /// Total number of zones after loading
+    /// </summary>
+    public int TotalZones { get; set; }
+    
+    /// <summary>
     /// Number of .wld files processed
     /// </summary>
     public int WorldFilesProcessed { get; set; }
@@ -257,4 +313,9 @@ public class WorldLoadingResult
     /// Number of .obj files processed
     /// </summary>
     public int ObjectFilesProcessed { get; set; }
+    
+    /// <summary>
+    /// Number of .zon files processed
+    /// </summary>
+    public int ZoneFilesProcessed { get; set; }
 }

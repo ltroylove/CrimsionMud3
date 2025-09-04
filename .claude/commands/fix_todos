@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""
+Claude Code slash command: /fix-todos
+Place this file in: .claude/commands/fix-todos (no extension)
+Make it executable: chmod +x .claude/commands/fix-todos
+"""
+
+import os
+import sys
+import json
+import re
+from pathlib import Path
+
+def find_todos(path="."):
+    """Scan codebase for TODO items"""
+    todos = []
+    code_extensions = {'.py', '.js', '.ts', '.jsx', '.tsx', '.java', '.cpp', 
+                      '.c', '.h', '.hpp', '.cs', '.rb', '.go', '.rs', '.swift'}
+    
+    todo_pattern = re.compile(
+        r'(?:^|[^a-zA-Z])(TODO|FIXME|HACK|XXX|OPTIMIZE|REFACTOR)[\s:]+(.+)$',
+        re.IGNORECASE | re.MULTILINE
+    )
+    
+    for file_path in Path(path).rglob('*'):
+        if file_path.is_file() and file_path.suffix in code_extensions:
+            # Skip hidden directories and node_modules
+            if any(part.startswith('.') or part == 'node_modules' for part in file_path.parts):
+                continue
+                
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    lines = content.splitlines()
+                    
+                for i, line in enumerate(lines, 1):
+                    match = todo_pattern.search(line)
+                    if match:
+                        # Get context (3 lines before and after)
+                        start = max(0, i - 4)
+                        end = min(len(lines), i + 3)
+                        context_lines = lines[start:end]
+                        context = '\n'.join(context_lines)
+                        
+                        todos.append({
+                            'file': str(file_path),
+                            'line': i,
+                            'type': match.group(1).upper(),
+                            'content': match.group(2).strip(),
+                            'context': context
+                        })
+                        
+            except Exception as e:
+                pass
+                
+    return todos
+
+def main():
+    # Find all TODOs
+    todos = find_todos()
+    
+    if not todos:
+        print("No TODOs found in the codebase.")
+        sys.exit(0)
+    
+    # Sort by priority
+    priority_order = {'FIXME': 0, 'XXX': 1, 'HACK': 2, 'TODO': 3, 'OPTIMIZE': 4, 'REFACTOR': 5}
+    todos.sort(key=lambda x: priority_order.get(x['type'], 6))
+    
+    # Output for Claude Code to process
+    print(f"Found {len(todos)} TODO items in the codebase.\n")
+    
+    # Create instructions for Claude to process each TODO
+    for i, todo in enumerate(todos, 1):
+        print(f"### TODO {i}/{len(todos)}: {todo['type']} in {todo['file']}:{todo['line']}")
+        print(f"Content: {todo['content']}\n")
+    
+    print("\n---\n")
+    print("I'll now analyze and fix these TODOs using a multi-agent approach:\n")
+    
+    # Generate Claude instructions
+    for i, todo in enumerate(todos, 1):
+        print(f"""
+## Processing TODO {i}: {todo['type']} in {todo['file']}:{todo['line']}
+
+**TODO Content:** {todo['content']}
+
+**Context:**
+```
+{todo['context']}
+```
+
+### Step 1: Analysis
+Please analyze this TODO to understand:
+- What needs to be implemented
+- Dependencies and prerequisites  
+- Complexity assessment
+- Potential side effects
+
+### Step 2: Implementation
+Based on the analysis, implement a fix that:
+- Addresses the TODO completely
+- Follows best practices
+- Includes error handling
+- Is well-documented
+
+### Step 3: Validation
+Verify the fix by checking:
+- Does it solve the original TODO?
+- Are there any edge cases?
+- What tests should be added?
+- Does it match the codebase style?
+
+---
+""")
+    
+    # Output summary for Claude to act on
+    print("\n## Summary Instructions for Claude Code:\n")
+    print("Please process each TODO above by:")
+    print("1. First analyzing what needs to be done")
+    print("2. Implementing a proper fix")
+    print("3. Validating the fix meets requirements")
+    print("4. Apply the changes to the respective files")
+    print("\nFor each fix, explain your reasoning and any trade-offs made.")
+
+if __name__ == "__main__":
+    main()

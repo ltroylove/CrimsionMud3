@@ -25,7 +25,10 @@
       "Bash(git checkout:*)",
       "Bash(git check-ignore:*)",
       "Bash(dotnet run:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(cp:*)",
+      "Bash(csc:*)",
+      "Bash(./test-data-loading.exe)"
     ],
     "deny": [],
     "ask": []

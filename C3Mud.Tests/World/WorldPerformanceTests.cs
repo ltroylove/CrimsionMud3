@@ -160,7 +160,8 @@ public class WorldPerformanceTests
         var worldDatabase = new WorldDatabase();
         var mobileDatabase = new MobileDatabase();
         var objectDatabase = new ObjectDatabase();
-        var worldLoader = new WorldLoader(worldDatabase, mobileDatabase, objectDatabase);
+        var zoneDatabase = new ZoneDatabase();
+        var worldLoader = new WorldLoader(worldDatabase, mobileDatabase, objectDatabase, zoneDatabase);
         var testDataPath = Path.Combine(Directory.GetCurrentDirectory(), "Original-Code", "dev", "lib", "areas");
         
         // Skip test if test data directory doesn't exist
