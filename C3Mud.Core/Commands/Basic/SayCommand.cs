@@ -1,4 +1,5 @@
 using C3Mud.Core.Players;
+using C3Mud.Core.Services;
 
 namespace C3Mud.Core.Commands.Basic;
 
@@ -8,6 +9,17 @@ namespace C3Mud.Core.Commands.Basic;
 /// </summary>
 public class SayCommand : BaseCommand
 {
+    private static IRoomPlayerManager? _roomPlayerManager;
+    
+    /// <summary>
+    /// Set the room player manager for dependency injection
+    /// In a full implementation, this would be injected via constructor
+    /// </summary>
+    public static void SetRoomPlayerManager(IRoomPlayerManager roomPlayerManager)
+    {
+        _roomPlayerManager = roomPlayerManager;
+    }
+    
     public override string Name => "say";
     public override string[] Aliases => new[] { "'" };
     public override PlayerPosition MinimumPosition => PlayerPosition.Resting;
@@ -22,11 +34,22 @@ public class SayCommand : BaseCommand
         }
 
         // Format the message for the speaker
-        var speakerMessage = $"&YYou say: &W'{arguments}'&N";
+        var speakerMessage = $"&YYou say, &W'{arguments}'&N";
         await SendToPlayerAsync(player, speakerMessage, formatted: true);
 
-        // In a full implementation, this would send to all players in the room
-        // For now, just acknowledge the command worked
-        await Task.CompletedTask;
+        // Broadcast to all other players in the room
+        if (_roomPlayerManager != null)
+        {
+            var playersInRoom = _roomPlayerManager.GetPlayersInRoom(player.CurrentRoomVnum);
+            var roomMessage = $"&Y{player.Name} says, &W'{arguments}'&N";
+            
+            foreach (var otherPlayer in playersInRoom)
+            {
+                if (otherPlayer != player && otherPlayer.IsConnected)
+                {
+                    await SendToPlayerAsync(otherPlayer, roomMessage, formatted: true);
+                }
+            }
+        }
     }
 }

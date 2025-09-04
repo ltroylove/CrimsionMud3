@@ -1,4 +1,5 @@
 using C3Mud.Core.Networking;
+using C3Mud.Core.Players.Models;
 
 namespace C3Mud.Core.Players;
 
@@ -14,6 +15,8 @@ public class Player : IPlayer
     public PlayerPosition Position { get; set; } = PlayerPosition.Standing;
     public bool IsConnected => Connection?.IsConnected ?? false;
     public IConnectionDescriptor? Connection { get; set; }
+    public int CurrentRoomVnum { get; set; } = 20385; // Default starting room from 15Rooms.wld
+    public LegacyPlayerFileData LegacyPlayerFileData { get; set; }
 
     public Player(string id)
     {

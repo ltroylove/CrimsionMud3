@@ -9,7 +9,7 @@ namespace C3Mud.Core.Commands.Basic;
 public class HelpCommand : BaseCommand
 {
     public override string Name => "help";
-    public override string[] Aliases => Array.Empty<string>();
+    public override string[] Aliases => new[] { "h" };
     public override PlayerPosition MinimumPosition => PlayerPosition.Sleeping;
     public override int MinimumLevel => 1;
 
@@ -28,28 +28,19 @@ public class HelpCommand : BaseCommand
     private static async Task ShowGeneralHelp(IPlayer player)
     {
         var generalHelp = @"&W
-C3MUD Help System
-=================
+Available commands:
 
-&YBasic Commands:&N
-  &Wlook&N (l)     - Look at your surroundings
-  &Wquit&N (q)     - Leave the game
-  &Wwho&N          - See who else is online
-  &Wscore&N (sc)   - View your character statistics
-  &Whelp&N <topic> - Get help on a specific topic
-
-&YCommunication:&N
-  &Wsay&N <message> - Say something to others in the room
+&Wlook&N (l)      - Look at your surroundings
+&Wquit&N (q)      - Leave the game  
+&Wwho&N           - See who else is online
+&Wscore&N (sc)    - View your character statistics
+&Wsay&N <message> - Say something to others in the room
+&Whelp&N <topic>  - Get help on a specific topic
 
 &YMovement:&N
-  &Wnorth&N, &Wsouth&N, &Weast&N, &Wwest&N, &Wup&N, &Wdown&N
-  (Movement commands - world system coming soon)
+&Wnorth&N, &Wsouth&N, &Weast&N, &Wwest&N, &Wup&N, &Wdown&N
 
-&YFor more specific help, type: &Whelp <command name>&N
-&YExample: help look&N
-
-&KNote: This is an early development version of C3MUD.
-Many features are still being implemented.&N";
+For more help on any command, type: &Whelp <command name>&N&N";
 
         await SendToPlayerAsync(player, generalHelp, formatted: true);
     }

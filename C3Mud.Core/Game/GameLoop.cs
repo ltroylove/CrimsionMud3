@@ -2,8 +2,10 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using C3Mud.Core.Commands;
+using C3Mud.Core.Commands.Movement;
 using C3Mud.Core.Networking;
 using C3Mud.Core.Players;
+using C3Mud.Core.World.Services;
 
 namespace C3Mud.Core.Game;
 
@@ -16,6 +18,7 @@ public class GameLoop : BackgroundService
     private readonly ITcpServer _tcpServer;
     private readonly IConnectionManager _connectionManager;
     private readonly ICommandRegistry _commandRegistry;
+    private readonly IWorldDatabase? _worldDatabase;
     private readonly ILogger<GameLoop> _logger;
     private readonly ConcurrentDictionary<string, IPlayer> _players = new();
 
@@ -23,11 +26,13 @@ public class GameLoop : BackgroundService
         ITcpServer tcpServer,
         IConnectionManager connectionManager,
         ICommandRegistry commandRegistry,
-        ILogger<GameLoop> logger)
+        ILogger<GameLoop> logger,
+        IWorldDatabase? worldDatabase = null)
     {
         _tcpServer = tcpServer;
         _connectionManager = connectionManager;
         _commandRegistry = commandRegistry;
+        _worldDatabase = worldDatabase;
         _logger = logger;
     }
 
@@ -67,13 +72,35 @@ public class GameLoop : BackgroundService
     {
         try
         {
+            // Register basic commands
             _commandRegistry.RegisterCommand(new Commands.Basic.LookCommand());
             _commandRegistry.RegisterCommand(new Commands.Basic.QuitCommand());
             _commandRegistry.RegisterCommand(new Commands.Basic.WhoCommand());
             _commandRegistry.RegisterCommand(new Commands.Basic.ScoreCommand());
             _commandRegistry.RegisterCommand(new Commands.Basic.HelpCommand());
+            _commandRegistry.RegisterCommand(new Commands.Basic.SayCommand());
 
-            _logger.LogInformation("Registered {CommandCount} basic commands", 5);
+            var basicCommandCount = 6;
+
+            // Register movement commands if WorldDatabase is available
+            if (_worldDatabase != null)
+            {
+                _commandRegistry.RegisterCommand(new NorthCommand(_worldDatabase));
+                _commandRegistry.RegisterCommand(new SouthCommand(_worldDatabase));
+                _commandRegistry.RegisterCommand(new EastCommand(_worldDatabase));
+                _commandRegistry.RegisterCommand(new WestCommand(_worldDatabase));
+                _commandRegistry.RegisterCommand(new UpCommand(_worldDatabase));
+                _commandRegistry.RegisterCommand(new DownCommand(_worldDatabase));
+                
+                var movementCommandCount = 6;
+                _logger.LogInformation("Registered {TotalCommandCount} commands ({BasicCommandCount} basic + {MovementCommandCount} movement)", 
+                    basicCommandCount + movementCommandCount, basicCommandCount, movementCommandCount);
+            }
+            else
+            {
+                _logger.LogWarning("WorldDatabase not available - movement commands not registered");
+                _logger.LogInformation("Registered {CommandCount} basic commands", basicCommandCount);
+            }
         }
         catch (Exception ex)
         {

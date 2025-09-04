@@ -1,0 +1,28 @@
+#7750
+obj thunder hammer giant~
+&wa &YThunder &wHammer&n~
+A giant hammer surging with elictrical power lies here.~
+~
+5 33557569 32 8193
+262272 7 7 6
+15 141000 500
+A
+19 1
+A
+18 3
+#7751
+obj gauntlets wind~
+9
+Gauntlets of the &WWind&n~
+A glowing pair of gauntlets lie here.~
+~
+9 34604033 0 129
+10 0 0 0
+6 9000 2500
+A
+19 1
+A
+1 1
+A
+2 2
+$~
