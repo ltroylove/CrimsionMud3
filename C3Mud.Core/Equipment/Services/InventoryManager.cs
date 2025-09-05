@@ -341,11 +341,11 @@ public class InventoryManager : IInventoryManager
         if (dotMatch.Success)
         {
             var number = int.Parse(dotMatch.Groups[1].Value);
-            var searchKeyword = dotMatch.Groups[2].Value.ToLower();
+            var searchKeyword = dotMatch.Groups[2].Value;
             
             var matches = inventory.Where(item => 
-                item.Name.ToLower().Contains(searchKeyword) ||
-                item.ShortDescription.ToLower().Contains(searchKeyword)).ToList();
+                item.Name.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase) ||
+                item.ShortDescription.Contains(searchKeyword, StringComparison.OrdinalIgnoreCase)).ToList();
             
             if (number <= matches.Count && number > 0)
             {
@@ -355,11 +355,10 @@ public class InventoryManager : IInventoryManager
             return null;
         }
         
-        // Simple keyword search
-        keyword = keyword.ToLower();
+        // Simple keyword search (case-insensitive)
         return inventory.FirstOrDefault(item => 
-            item.Name.ToLower().Contains(keyword) ||
-            item.ShortDescription.ToLower().Contains(keyword));
+            item.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+            item.ShortDescription.Contains(keyword, StringComparison.OrdinalIgnoreCase));
     }
 
     public string GetInventoryDisplay()
