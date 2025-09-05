@@ -485,10 +485,10 @@ public class EquipmentManager : IEquipmentManager
     /// <returns>True if player has extra attack item equipped</returns>
     private bool HasEquippedExtraAttackItem()
     {
-        var equipment = _player.GetEquipment();
-        
-        foreach (var equippedItem in equipment.Values)
+        // Check all equipment slots for extra attack items
+        foreach (EquipmentSlot slot in Enum.GetValues<EquipmentSlot>())
         {
+            var equippedItem = _player.GetEquippedItem(slot);
             if (equippedItem != null && HasExtraAttackApply(equippedItem))
             {
                 return true;

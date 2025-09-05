@@ -38,9 +38,9 @@ public static class LightSourceManager
     {
         if (player == null || room == null) return;
         
-        // Check if player has active light source equipped
-        var equipment = player.GetEquipment();
-        if (equipment.TryGetValue(EquipmentSlot.Light, out var lightItem) && lightItem != null)
+        // Check if player has active light source equipped in the light slot
+        var lightItem = player.GetEquippedItem(EquipmentSlot.Light);
+        if (lightItem != null)
         {
             if (IsActiveLightSource(lightItem))
             {
@@ -62,9 +62,9 @@ public static class LightSourceManager
     {
         if (player == null || room == null) return;
         
-        // Check if player has active light source equipped
-        var equipment = player.GetEquipment();
-        if (equipment.TryGetValue(EquipmentSlot.Light, out var lightItem) && lightItem != null)
+        // Check if player has active light source equipped in the light slot
+        var lightItem = player.GetEquippedItem(EquipmentSlot.Light);
+        if (lightItem != null)
         {
             if (IsActiveLightSource(lightItem))
             {
@@ -131,10 +131,10 @@ public static class LightSourceManager
     /// <param name="player">Player to update</param>
     private static void UpdatePlayerLightStatus(IPlayer player)
     {
-        var equipment = player.GetEquipment();
         var hasLight = false;
+        var lightItem = player.GetEquippedItem(EquipmentSlot.Light);
         
-        if (equipment.TryGetValue(EquipmentSlot.Light, out var lightItem) && lightItem != null)
+        if (lightItem != null)
         {
             hasLight = IsActiveLightSource(lightItem);
         }
@@ -158,8 +158,8 @@ public static class LightSourceManager
             return true;
             
         // Check if player has personal light source
-        var equipment = player.GetEquipment();
-        if (equipment.TryGetValue(EquipmentSlot.Light, out var lightItem) && lightItem != null)
+        var lightItem = player.GetEquippedItem(EquipmentSlot.Light);
+        if (lightItem != null)
         {
             return IsActiveLightSource(lightItem);
         }
