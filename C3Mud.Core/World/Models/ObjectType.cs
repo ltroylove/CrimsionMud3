@@ -82,5 +82,8 @@ public enum ObjectType
     COMPONENT = 24,
     
     /// <summary>Instruments for making music</summary>
-    INSTRUMENT = 25
+    INSTRUMENT = 25,
+    
+    /// <summary>Quest light source (special light item)</summary>
+    QSTLIGHT = 26
 }

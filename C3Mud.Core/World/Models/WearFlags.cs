@@ -82,5 +82,11 @@ public enum WearFlags : long
     BACK = 1L << 23,         // 8388608
     
     /// <summary>Can be wielded as two-handed weapon</summary>
-    TWOHANDS = 1L << 24      // 16777216
+    TWOHANDS = 1L << 24,     // 16777216
+    
+    /// <summary>Can be worn on tail</summary>
+    TAIL = 1L << 18,         // 262144
+    
+    /// <summary>Can be worn on four legs</summary>
+    FOURLEGS = 1L << 19      // 524288
 }

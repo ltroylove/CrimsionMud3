@@ -190,8 +190,9 @@ and the floor is made of stone.
             await SendToPlayerAsync(player, exit.Description);
         }
         
-        // Check door state
-        if ((exit.DoorFlags & 1) != 0) // Closed door
+        // Check door state using modern C# flag patterns
+        var doorFlags = (DoorFlags)exit.DoorFlags;
+        if (doorFlags.HasFlag(DoorFlags.ISDOOR) && doorFlags.HasFlag(DoorFlags.CLOSED))
         {
             await SendToPlayerAsync(player, "The door is closed.");
         }
@@ -219,7 +220,8 @@ and the floor is made of stone.
                     await SendToPlayerAsync(player, exit.Description);
                 }
                 
-                if ((exit.DoorFlags & 1) != 0) // Closed
+                var exitDoorFlags = (DoorFlags)exit.DoorFlags;
+                if (exitDoorFlags.HasFlag(DoorFlags.ISDOOR) && exitDoorFlags.HasFlag(DoorFlags.CLOSED))
                 {
                     await SendToPlayerAsync(player, "The door is closed.");
                 }

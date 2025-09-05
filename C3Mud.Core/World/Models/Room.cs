@@ -49,6 +49,12 @@ public class Room
     public int LightLevel { get; set; }
     
     /// <summary>
+    /// Number of active light sources in this room (torches, lanterns, etc.)
+    /// Based on original CircleMUD world[room].light counter
+    /// </summary>
+    public int LightSources { get; set; }
+    
+    /// <summary>
     /// Mana regeneration rate in this room
     /// </summary>
     public int ManaRegen { get; set; }
@@ -82,6 +88,12 @@ public class Room
     /// Objects/items currently in this room
     /// </summary>
     public List<WorldObject> Objects { get; set; } = new List<WorldObject>();
+    
+    /// <summary>
+    /// Alias for Objects - items currently in this room
+    /// Provided for equipment system compatibility
+    /// </summary>
+    public List<WorldObject> Items => Objects;
     
     /// <summary>
     /// Features that can be examined in detail (e.g., "walls", "floor")

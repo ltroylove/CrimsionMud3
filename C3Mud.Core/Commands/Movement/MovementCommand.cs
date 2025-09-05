@@ -230,11 +230,12 @@ public abstract class MovementCommand : BaseCommand
     /// <returns>True if player can pass through</returns>
     protected async Task<bool> CanPassThroughExit(IPlayer player, Exit exit)
     {
-        // Check for closed door (EX_CLOSED = 1)
-        if ((exit.DoorFlags & 1) != 0)
+        // Check door state using modern C# flag patterns
+        var doorFlags = (DoorFlags)exit.DoorFlags;
+        if (doorFlags.HasFlag(DoorFlags.ISDOOR) && doorFlags.HasFlag(DoorFlags.CLOSED))
         {
-            // Check for locked door (EX_LOCKED = 2, so combined with closed = 3)
-            if ((exit.DoorFlags & 2) != 0)
+            // Check for locked door
+            if (doorFlags.HasFlag(DoorFlags.LOCKED))
             {
                 // Door is locked - check if player has key
                 if (exit.KeyVnum > 0 && player.HasItem(exit.KeyVnum))

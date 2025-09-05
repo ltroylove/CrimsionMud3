@@ -21,10 +21,33 @@ public class ScoreCommand : BaseCommand
     private static async Task ShowScore(IPlayer player)
     {
         var playerData = player.LegacyPlayerFileData;
-        var points = playerData.Points;
+        
+        if (!playerData.HasValue)
+        {
+            // If no legacy data, show basic info
+            var basicDisplay = $@"&W
+{player.Name}'s Character Statistics:
+=====================================
+
+&YName:&N     {player.Name}
+&YLevel:&N    {player.Level}
+&YPosition:&N {GetPositionName(player.Position)}
+
+&GHit Points:&N    {player.HitPoints}/{player.MaxHitPoints}
+&RExperience:&N    {player.ExperiencePoints}
+&wGold:&N         {player.Gold}
+
+&WConnection Status:&N {(player.IsConnected ? "&GConnected&N" : "&RDisconnected&N")}&N";
+
+            await SendToPlayerAsync(player, basicDisplay, formatted: true);
+            return;
+        }
+
+        var data = playerData.Value;
+        var points = data.Points;
         
         // Format alignment description
-        var alignmentText = GetAlignmentText(playerData.Alignment);
+        var alignmentText = GetAlignmentText(data.Alignment);
         
         // Format hit point status
         var hitStatus = GetVitalStatus(points.Hit, points.MaxHit, "health");
@@ -44,7 +67,7 @@ public class ScoreCommand : BaseCommand
 &YMove Points:&N   {points.Move}/{points.MaxMove}   {moveStatus}
 
 &RExperience:&N    {points.Experience}
-&CAlignment:&N     {alignmentText} ({playerData.Alignment})
+&CAlignment:&N     {alignmentText} ({data.Alignment})
 &YArmor Class:&N   {points.Armor}
 &wGold:&N         {points.Gold}
 &WBank:&N         {points.Bank}

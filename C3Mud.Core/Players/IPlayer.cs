@@ -1,6 +1,7 @@
 using C3Mud.Core.Networking;
 using C3Mud.Core.Players.Models;
 using C3Mud.Core.World.Models;
+using C3Mud.Core.Characters.Models;
 
 namespace C3Mud.Core.Players;
 
@@ -132,6 +133,12 @@ public interface IPlayer
     WorldObject? GetEquippedItem(EquipmentSlot slot);
     
     /// <summary>
+    /// Get all equipped items as a dictionary
+    /// </summary>
+    /// <returns>Dictionary of equipment slot to equipped item</returns>
+    Dictionary<EquipmentSlot, WorldObject?> GetEquipment();
+    
+    /// <summary>
     /// Get skill level for a specific skill
     /// </summary>
     /// <param name="skillName">Name of the skill</param>
@@ -145,10 +152,22 @@ public interface IPlayer
     List<WorldObject> GetInventory();
     
     /// <summary>
+    /// Get player's character class
+    /// </summary>
+    /// <returns>Character class</returns>
+    CharacterClass GetCharacterClass();
+    
+    /// <summary>
+    /// Get player's alignment
+    /// </summary>
+    /// <returns>Character alignment</returns>
+    Alignment GetAlignment();
+    
+    /// <summary>
     /// Legacy player file data containing all character statistics
     /// Used for score display and character persistence
     /// </summary>
-    LegacyPlayerFileData LegacyPlayerFileData { get; set; }
+    LegacyPlayerFileData? LegacyPlayerFileData { get; set; }
     
     /// <summary>
     /// Send a message to the player
