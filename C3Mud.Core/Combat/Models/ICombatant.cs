@@ -48,4 +48,15 @@ public interface ICombatant
     /// </summary>
     /// <returns>Combat action</returns>
     Task<CombatAction> GetNextActionAsync();
+
+    /// <summary>
+    /// Current target this combatant is fighting
+    /// </summary>
+    ICombatant? CurrentTarget { get; set; }
+
+    /// <summary>
+    /// Set the target this combatant should attack
+    /// </summary>
+    /// <param name="target">The target to attack</param>
+    void SetTarget(ICombatant? target);
 }

@@ -8,6 +8,7 @@ namespace C3Mud.Core.Combat.Models;
 public class PlayerCombatant : ICombatant
 {
     private readonly IPlayer _player;
+    private static readonly Random _random = new Random();
 
     public PlayerCombatant(IPlayer player)
     {
@@ -20,11 +21,18 @@ public class PlayerCombatant : ICombatant
 
     public int MaxHitPoints => _player.MaxHitPoints;
 
-    public int Initiative => _player.Dexterity + (new Random().Next(1, 11)); // Dex + 1d10
+    public int Initiative => _player.Dexterity + _random.Next(1, 11); // Dex + 1d10
 
     public bool IsAlive => _player.HitPoints > 0 && _player.Position != PlayerPosition.Dead;
 
     public bool CanAct => IsAlive && _player.Position >= PlayerPosition.Stunned;
+
+    public ICombatant? CurrentTarget { get; set; }
+
+    public void SetTarget(ICombatant? target)
+    {
+        CurrentTarget = target;
+    }
 
     public async Task ApplyDamageAsync(int damage)
     {

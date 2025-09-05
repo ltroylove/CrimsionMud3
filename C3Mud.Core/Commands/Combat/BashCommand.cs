@@ -13,6 +13,7 @@ public class BashCommand : BaseCommand
 {
     private readonly IWorldDatabase _worldDatabase;
     private readonly ICombatEngine _combatEngine;
+    private readonly Random _random = new Random();
 
     public BashCommand(IWorldDatabase worldDatabase, ICombatEngine combatEngine)
     {
@@ -60,8 +61,7 @@ public class BashCommand : BaseCommand
 
         // Calculate bash skill success (simple implementation)
         var bashSkill = player.GetSkillLevel("bash");
-        var random = new Random();
-        var skillRoll = random.Next(1, 101);
+        var skillRoll = _random.Next(1, 101);
         var successChance = Math.Max(10, bashSkill + (player.Strength - 13) * 5);
 
         bool bashSuccessful = skillRoll <= successChance;

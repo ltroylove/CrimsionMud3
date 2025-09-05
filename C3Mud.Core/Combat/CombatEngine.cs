@@ -2,6 +2,8 @@ using C3Mud.Core.Combat.Models;
 using C3Mud.Core.Players;
 using C3Mud.Core.World.Services;
 using C3Mud.Core.World.Models;
+using C3Mud.Core.Characters;
+using C3Mud.Core.Characters.Models;
 
 namespace C3Mud.Core.Combat;
 
@@ -49,10 +51,16 @@ public class CombatEngine : ICombatEngine
         return true;
     }
 
-    public Task<HitResult> CalculateHitAsync(IPlayer attacker, IPlayer defender, int? forceDiceRoll = null)
+    public Task<HitResult> CalculateHitAsync(ICharacter attacker, ICharacter defender, int? forceDiceRoll = null)
     {
         // Calculate THAC0 based on level (CircleMUD formula: 20 - (level-1))
         int thac0 = Math.Max(1, 20 - (attacker.Level - 1));
+        
+        // Mobs get +2 to hit bonus (original: if (IS_NPC(ch)) calc_thaco -= 2;)
+        if (attacker.IsNPC)
+        {
+            thac0 -= 2;
+        }
         
         // Calculate strength bonus to hit
         int strengthBonus = GetStrengthHitBonus(attacker.Strength);
@@ -94,7 +102,7 @@ public class CombatEngine : ICombatEngine
         };
     }
 
-    public Task<DamageResult> CalculateDamageAsync(IPlayer attacker, IPlayer defender, bool isCritical)
+    public Task<DamageResult> CalculateDamageAsync(ICharacter attacker, ICharacter defender, bool isCritical)
     {
         var weapon = attacker.GetWieldedWeapon();
         
@@ -116,6 +124,19 @@ public class CombatEngine : ICombatEngine
             {
                 baseDamage += _random.Next(1, diceSides + 1);
             }
+        }
+        else if (attacker.IsMob && attacker is Characters.Mobile mob)
+        {
+            // Mob natural attacks - use damage dice from template
+            var damageDice = mob.GetDamageDice();
+            int diceCount = damageDice.count;
+            int diceSides = damageDice.sides;
+            baseDamage = 0;
+            for (int i = 0; i < diceCount; i++)
+            {
+                baseDamage += _random.Next(1, diceSides + 1);
+            }
+            weaponName = "natural attacks";
         }
         else
         {
@@ -175,24 +196,25 @@ public class CombatEngine : ICombatEngine
         foreach (var combatant in initiativeOrder)
         {
             if (combatEnded) break;
+            if (!combatant.CanAct) continue;
             
-            // Find a target (simple implementation - attack first other combatant)
-            var target = combatants.FirstOrDefault(c => c != combatant && c.HitPoints > 0);
+            // Get or assign target using proper targeting logic
+            var target = GetValidTarget(combatant, combatants);
             if (target == null) continue;
             
-            // For now, assume all combatants are PlayerCombatants
-            var attackerPlayer = ((PlayerCombatant)combatant).Player;
-            var targetPlayer = ((PlayerCombatant)target).Player;
+            // Get the underlying characters (works for both players and mobs)
+            var attackerChar = ((CharacterCombatant)combatant).Character;
+            var targetChar = ((CharacterCombatant)target).Character;
             
             // Calculate hit
-            var hitResult = await CalculateHitAsync(attackerPlayer, targetPlayer);
+            var hitResult = await CalculateHitAsync(attackerChar, targetChar);
             
             AttackResult attackResult;
             
             if (hitResult.IsHit)
             {
                 // Calculate damage
-                var damageResult = await CalculateDamageAsync(attackerPlayer, targetPlayer, hitResult.IsCriticalHit);
+                var damageResult = await CalculateDamageAsync(attackerChar, targetChar, hitResult.IsCriticalHit);
                 
                 // Apply damage
                 await target.ApplyDamageAsync(damageResult.TotalDamage);
@@ -272,5 +294,80 @@ public class CombatEngine : ICombatEngine
         }
         
         return false;
+    }
+
+    /// <summary>
+    /// Get a valid target for the combatant using proper targeting logic
+    /// </summary>
+    /// <param name="attacker">The combatant looking for a target</param>
+    /// <param name="allCombatants">All combatants in the fight</param>
+    /// <returns>Valid target or null if none available</returns>
+    private ICombatant? GetValidTarget(ICombatant attacker, List<ICombatant> allCombatants)
+    {
+        // First, check if current target is still valid
+        if (attacker.CurrentTarget != null && 
+            IsValidTarget(attacker.CurrentTarget, allCombatants))
+        {
+            return attacker.CurrentTarget;
+        }
+
+        // Current target is invalid, find a new one
+        var availableTargets = allCombatants
+            .Where(c => c != attacker && IsValidTarget(c, allCombatants))
+            .ToList();
+
+        if (!availableTargets.Any())
+        {
+            attacker.SetTarget(null);
+            return null;
+        }
+
+        // Targeting priority logic:
+        // 1. Target someone who is already attacking this combatant (counter-attack)
+        // 2. Target someone who doesn't have anyone attacking them (spread damage)
+        // 3. Target the weakest opponent (lowest HP percentage)
+        
+        // Priority 1: Counter-attack
+        var counterTarget = availableTargets.FirstOrDefault(t => t.CurrentTarget == attacker);
+        if (counterTarget != null)
+        {
+            attacker.SetTarget(counterTarget);
+            return counterTarget;
+        }
+
+        // Priority 2: Target someone not being attacked
+        var unengagedTargets = availableTargets
+            .Where(t => !allCombatants.Any(c => c.CurrentTarget == t))
+            .ToList();
+        
+        if (unengagedTargets.Any())
+        {
+            var target = unengagedTargets
+                .OrderBy(t => (double)t.HitPoints / t.MaxHitPoints) // Weakest first
+                .First();
+            attacker.SetTarget(target);
+            return target;
+        }
+
+        // Priority 3: Target the weakest available opponent
+        var weakestTarget = availableTargets
+            .OrderBy(t => (double)t.HitPoints / t.MaxHitPoints)
+            .First();
+        
+        attacker.SetTarget(weakestTarget);
+        return weakestTarget;
+    }
+
+    /// <summary>
+    /// Check if a combatant is a valid target
+    /// </summary>
+    /// <param name="target">Potential target</param>
+    /// <param name="allCombatants">All combatants in the fight</param>
+    /// <returns>True if target is valid</returns>
+    private bool IsValidTarget(ICombatant target, List<ICombatant> allCombatants)
+    {
+        return allCombatants.Contains(target) && 
+               target.IsAlive && 
+               target.HitPoints > 0;
     }
 }

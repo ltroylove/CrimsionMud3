@@ -12,6 +12,7 @@ public class KickCommand : BaseCommand
 {
     private readonly IWorldDatabase _worldDatabase;
     private readonly ICombatEngine _combatEngine;
+    private readonly Random _random = new Random();
 
     public KickCommand(IWorldDatabase worldDatabase, ICombatEngine combatEngine)
     {
@@ -51,8 +52,7 @@ public class KickCommand : BaseCommand
 
         // Calculate kick skill success (simple implementation)
         var kickSkill = player.GetSkillLevel("kick");
-        var random = new Random();
-        var skillRoll = random.Next(1, 101);
+        var skillRoll = _random.Next(1, 101);
         var successChance = Math.Max(10, kickSkill + (player.Dexterity - 13) * 3);
 
         bool kickSuccessful = skillRoll <= successChance;
@@ -60,7 +60,7 @@ public class KickCommand : BaseCommand
         if (kickSuccessful)
         {
             // Successful kick - calculate damage (1d4 + str bonus)
-            var damage = random.Next(1, 5); // 1d4
+            var damage = _random.Next(1, 5); // 1d4
             var strBonus = Math.Max(0, (player.Strength - 13) / 2); // Simple strength bonus
             var totalDamage = damage + strBonus;
 

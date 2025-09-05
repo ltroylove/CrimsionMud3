@@ -1,5 +1,6 @@
 using C3Mud.Core.Combat.Models;
 using C3Mud.Core.Players;
+using C3Mud.Core.Characters;
 
 namespace C3Mud.Core.Combat;
 
@@ -24,16 +25,16 @@ public interface ICombatEngine
     /// <param name="defender">Defending player</param>
     /// <param name="forceDiceRoll">Optional forced dice roll for testing</param>
     /// <returns>Hit calculation result</returns>
-    Task<HitResult> CalculateHitAsync(IPlayer attacker, IPlayer defender, int? forceDiceRoll = null);
+    Task<HitResult> CalculateHitAsync(ICharacter attacker, ICharacter defender, int? forceDiceRoll = null);
 
     /// <summary>
     /// Calculate damage for a successful hit
     /// </summary>
-    /// <param name="attacker">Attacking player</param>
-    /// <param name="defender">Defending player</param>
+    /// <param name="attacker">Attacking character</param>
+    /// <param name="defender">Defending character</param>
     /// <param name="isCritical">Whether this is a critical hit</param>
     /// <returns>Damage calculation result</returns>
-    Task<DamageResult> CalculateDamageAsync(IPlayer attacker, IPlayer defender, bool isCritical);
+    Task<DamageResult> CalculateDamageAsync(ICharacter attacker, ICharacter defender, bool isCritical);
 
     /// <summary>
     /// Execute a single combat round for all combatants
