@@ -49,6 +49,12 @@ public interface IWorldDatabase
     /// <returns>True if room is loaded, false otherwise</returns>
     bool IsRoomLoaded(int vnum);
     
+    /// <summary>
+    /// Gets the current weather description for outdoor areas
+    /// </summary>
+    /// <returns>Weather description string</returns>
+    string GetCurrentWeather();
+    
     // Zone Reset Methods
     
     /// <summary>

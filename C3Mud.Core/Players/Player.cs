@@ -1,5 +1,6 @@
 using C3Mud.Core.Networking;
 using C3Mud.Core.Players.Models;
+using C3Mud.Core.World.Models;
 
 namespace C3Mud.Core.Players;
 
@@ -16,6 +17,9 @@ public class Player : IPlayer
     public bool IsConnected => Connection?.IsConnected ?? false;
     public IConnectionDescriptor? Connection { get; set; }
     public int CurrentRoomVnum { get; set; } = 20385; // Default starting room from 15Rooms.wld
+    public DateTime LastMovementTime { get; set; } = DateTime.MinValue;
+    public bool CanFly { get; private set; } = false;
+    public bool HasLight { get; private set; } = false;
     public LegacyPlayerFileData LegacyPlayerFileData { get; set; }
 
     public Player(string id)
@@ -53,6 +57,53 @@ public class Player : IPlayer
             await SendMessageAsync(reason);
             await Connection.CloseAsync();
         }
+    }
+
+    public bool HasItem(int itemVnum)
+    {
+        // TODO: Implement full inventory checking once inventory system is implemented
+        // For Iteration 4 testing, we'll use a simple check
+        // In a real implementation, this would check the player's inventory
+        
+        // For now, always return false unless it's a test key
+        // This will be replaced with proper inventory system later
+        return false;
+    }
+
+    // Combat-related properties - stub implementations for TDD Red phase
+    public int HitPoints { get; set; } = 100;
+    public int MaxHitPoints { get; set; } = 100;
+    public bool IsInCombat => false; // TODO: Implement combat state tracking
+    public int Strength => 13; // Default attribute values
+    public int Dexterity => 13;
+    public int Constitution => 13;
+    public int ArmorClass => 10; // Basic AC
+    public int ExperiencePoints { get; set; } = 0;
+    public int Gold { get; set; } = 0;
+    public int RecentDeathCount => 0; // TODO: Implement death tracking
+
+    public WorldObject? GetWieldedWeapon()
+    {
+        // TODO: Implement equipment system
+        return null;
+    }
+
+    public WorldObject? GetEquippedItem(EquipmentSlot slot)
+    {
+        // TODO: Implement equipment system
+        return null;
+    }
+
+    public int GetSkillLevel(string skillName)
+    {
+        // TODO: Implement skill system
+        return 0; // No skills for now
+    }
+
+    public List<WorldObject> GetInventory()
+    {
+        // TODO: Implement inventory system
+        return new List<WorldObject>();
     }
 
     public override bool Equals(object? obj)

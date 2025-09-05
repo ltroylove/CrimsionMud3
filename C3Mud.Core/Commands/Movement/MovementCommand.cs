@@ -80,6 +80,12 @@ public abstract class MovementCommand : BaseCommand
             return false;
         }
 
+        // Check for door restrictions
+        if (!await CanPassThroughExit(player, exit))
+        {
+            return false; // Error message already sent in CanPassThroughExit
+        }
+
         // Check if target room exists
         var targetRoom = _worldDatabase.GetRoom(exit.TargetRoomVnum);
         if (targetRoom == null)
@@ -88,14 +94,79 @@ public abstract class MovementCommand : BaseCommand
             return false;
         }
 
-        // Update player location
-        player.CurrentRoomVnum = targetRoom.VirtualNumber;
+        // Check room-specific restrictions
+        if (!await CanEnterRoom(player, targetRoom))
+        {
+            return false; // Error message already sent in CanEnterRoom
+        }
+
+        // Check movement delay
+        if (!await CanMoveNow(player))
+        {
+            await SendToPlayerAsync(player, "You can't move that fast!");
+            return false;
+        }
+
+        // Send departure message to other players in current room
+        await SendMovementMessageToOthersInRoom(currentRoom, player, $"{player.Name} leaves {FormatDirectionName(direction)}.");
         
-        // Send movement message
+        // Remove player from current room's player list
+        currentRoom.Players.Remove(player);
+        
+        // Update player location and movement time
+        player.CurrentRoomVnum = targetRoom.VirtualNumber;
+        player.LastMovementTime = DateTime.UtcNow;
+        
+        // Add player to destination room's player list
+        targetRoom.Players.Add(player);
+        
+        // Send arrival message to other players in destination room
+        var oppositeDirection = GetOppositeDirection(direction);
+        await SendMovementMessageToOthersInRoom(targetRoom, player, $"{player.Name} has arrived from the {FormatDirectionName(oppositeDirection)}.");
+        
+        // Send movement message to the moving player
         var directionText = direction.ToString().ToLowerInvariant();
         await SendToPlayerAsync(player, $"You head {directionText}.");
 
         return true;
+    }
+    
+    /// <summary>
+    /// Send a movement-related message to all other players in a room (excluding the moving player)
+    /// </summary>
+    /// <param name="room">Room containing the players</param>
+    /// <param name="excludePlayer">Player to exclude from receiving the message</param>
+    /// <param name="message">Message to send</param>
+    protected async Task SendMovementMessageToOthersInRoom(Room room, IPlayer excludePlayer, string message)
+    {
+        var otherPlayers = room.Players.Where(p => p != excludePlayer && p.IsConnected);
+        
+        foreach (var otherPlayer in otherPlayers)
+        {
+            if (otherPlayer.Connection != null)
+            {
+                await otherPlayer.Connection.SendDataAsync(message + "\r\n");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Get the opposite direction for arrival messages
+    /// </summary>
+    /// <param name="direction">Original direction</param>
+    /// <returns>Opposite direction</returns>
+    protected static Direction GetOppositeDirection(Direction direction)
+    {
+        return direction switch
+        {
+            Direction.North => Direction.South,
+            Direction.South => Direction.North,
+            Direction.East => Direction.West,
+            Direction.West => Direction.East,
+            Direction.Up => Direction.Down,
+            Direction.Down => Direction.Up,
+            _ => direction // For unknown directions, return the same
+        };
     }
 
     /// <summary>
@@ -149,5 +220,95 @@ public abstract class MovementCommand : BaseCommand
             Direction.Down => "down",
             _ => direction.ToString().ToLowerInvariant()
         };
+    }
+
+    /// <summary>
+    /// Check if player can pass through an exit (handles doors, locks, keys)
+    /// </summary>
+    /// <param name="player">Player attempting to move</param>
+    /// <param name="exit">Exit to check</param>
+    /// <returns>True if player can pass through</returns>
+    protected async Task<bool> CanPassThroughExit(IPlayer player, Exit exit)
+    {
+        // Check for closed door (EX_CLOSED = 1)
+        if ((exit.DoorFlags & 1) != 0)
+        {
+            // Check for locked door (EX_LOCKED = 2, so combined with closed = 3)
+            if ((exit.DoorFlags & 2) != 0)
+            {
+                // Door is locked - check if player has key
+                if (exit.KeyVnum > 0 && player.HasItem(exit.KeyVnum))
+                {
+                    // Player has key - unlock and open door
+                    exit.DoorFlags = 0; // Clear all door flags
+                    await SendToPlayerAsync(player, "*Click*");
+                    await SendToPlayerAsync(player, "You unlock and open the door.");
+                    return true;
+                }
+                else
+                {
+                    await SendToPlayerAsync(player, "The door is locked.");
+                    return false;
+                }
+            }
+            else
+            {
+                // Door is closed but not locked
+                await SendToPlayerAsync(player, "The door is closed.");
+                return false;
+            }
+        }
+
+        return true; // No door or door is open
+    }
+
+    /// <summary>
+    /// Check if player can enter a specific room
+    /// </summary>
+    /// <param name="player">Player attempting to enter</param>
+    /// <param name="room">Room to enter</param>
+    /// <returns>True if player can enter</returns>
+    protected async Task<bool> CanEnterRoom(IPlayer player, Room room)
+    {
+        // Check if room requires flying
+        if (room.SectorType == SectorType.Flying && !player.CanFly)
+        {
+            await SendToPlayerAsync(player, "You need to fly to go there!");
+            return false;
+        }
+
+        // Check room capacity
+        if (room.MaxPlayers > 0 && room.Players.Count >= room.MaxPlayers)
+        {
+            await SendToPlayerAsync(player, "There's no room for you there.");
+            return false;
+        }
+
+        // Check minimum level requirement
+        if (room.MinimumLevel > 0 && player.Level < room.MinimumLevel)
+        {
+            await SendToPlayerAsync(player, "You are not experienced enough to enter that area.");
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Check if player can move now (movement delay check)
+    /// </summary>
+    /// <param name="player">Player attempting to move</param>
+    /// <returns>True if enough time has passed since last movement</returns>
+    protected async Task<bool> CanMoveNow(IPlayer player)
+    {
+        const double MovementDelaySeconds = 1.0; // 1 second delay between moves
+        
+        var timeSinceLastMove = DateTime.UtcNow - player.LastMovementTime;
+        if (timeSinceLastMove.TotalSeconds < MovementDelaySeconds)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

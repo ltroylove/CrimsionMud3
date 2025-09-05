@@ -365,4 +365,14 @@ public class WorldDatabase : IWorldDatabase
         // This would count active players in the zone
         return 0; // Placeholder - always return 0 for now
     }
+    
+    /// <summary>
+    /// Gets the current weather description for outdoor areas
+    /// </summary>
+    public string GetCurrentWeather()
+    {
+        // TODO: Implement proper weather system
+        // For now, return a placeholder weather description
+        return "The sky is clear.";
+    }
 }
