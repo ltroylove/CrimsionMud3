@@ -1,3 +1,4 @@
+using System.Linq;
 using C3Mud.Core.Networking;
 using C3Mud.Core.Players.Models;
 using C3Mud.Core.World.Models;
@@ -22,7 +23,7 @@ public class Player : IPlayer, ICharacter
     public DateTime LastMovementTime { get; set; } = DateTime.MinValue;
     public bool CanFly { get; private set; } = false;
     public bool HasLight { get; private set; } = false;
-    public LegacyPlayerFileData LegacyPlayerFileData { get; set; }
+    public LegacyPlayerFileData? LegacyPlayerFileData { get; set; }
 
     // ICharacter implementation
     public int Nr { get; set; } = -1; // Players always have Nr = -1
@@ -79,25 +80,33 @@ public class Player : IPlayer, ICharacter
 
     public bool HasItem(int itemVnum)
     {
-        // TODO: Implement full inventory checking once inventory system is implemented
-        // For Iteration 4 testing, we'll use a simple check
-        // In a real implementation, this would check the player's inventory
+        // Check equipped items first
+        foreach (var equippedItem in _equipment.Values)
+        {
+            if (equippedItem != null && equippedItem.VirtualNumber == itemVnum)
+                return true;
+        }
         
-        // For now, always return false unless it's a test key
-        // This will be replaced with proper inventory system later
+        // Check inventory items
+        foreach (var item in _inventory)
+        {
+            if (item.VirtualNumber == itemVnum)
+                return true;
+        }
+        
         return false;
     }
 
     // Combat-related properties - stub implementations for TDD Red phase
     public int HitPoints { get; set; } = 100;
     public int MaxHitPoints { get; set; } = 100;
-    public int Strength => 13; // Default attribute values
-    public int Dexterity => 13;
-    public int Constitution => 13;
+    public int Strength => LegacyPlayerFileData?.Abilities.Strength ?? 13; // Get from legacy data or default
+    public int Dexterity => LegacyPlayerFileData?.Abilities.Dexterity ?? 13; // Get from legacy data or default
+    public int Constitution => LegacyPlayerFileData?.Abilities.Constitution ?? 13; // Get from legacy data or default
     public int ArmorClass => 10; // Basic AC
     public int ExperiencePoints { get; set; } = 0;
     public int Gold { get; set; } = 0;
-    public int RecentDeathCount => 0; // TODO: Implement death tracking
+    public int RecentDeathCount => LegacyPlayerFileData?.Spare1 ?? 0; // Use spare1 field for death tracking
 
     public WorldObject? GetWieldedWeapon()
     {
@@ -117,20 +126,32 @@ public class Player : IPlayer, ICharacter
 
     public List<WorldObject> GetInventory()
     {
-        return _inventory;
+        return new List<WorldObject>(_inventory); // Return a copy to prevent external modification
     }
 
     public CharacterClass GetCharacterClass()
     {
-        // TODO: Implement proper character class system
-        // For now, return warrior as default
+        // Use LegacyPlayerFileData if available, otherwise default to Warrior
+        if (LegacyPlayerFileData.HasValue)
+        {
+            return (CharacterClass)LegacyPlayerFileData.Value.Class;
+        }
         return CharacterClass.Warrior;
     }
 
     public Alignment GetAlignment()
     {
-        // TODO: Implement proper alignment system
-        // For now, return neutral as default
+        // Use LegacyPlayerFileData if available, otherwise default to Neutral
+        if (LegacyPlayerFileData.HasValue)
+        {
+            var alignmentValue = LegacyPlayerFileData.Value.Alignment;
+            if (alignmentValue <= -350)
+                return Alignment.Evil;
+            else if (alignmentValue >= 350)
+                return Alignment.Good;
+            else
+                return Alignment.Neutral;
+        }
         return Alignment.Neutral;
     }
     
@@ -142,6 +163,111 @@ public class Player : IPlayer, ICharacter
     internal void SetEquippedItem(EquipmentSlot slot, WorldObject? item)
     {
         _equipment[slot] = item;
+    }
+
+    /// <summary>
+    /// Add an item to the player's inventory
+    /// </summary>
+    /// <param name="item">Item to add</param>
+    public void AddToInventory(WorldObject item)
+    {
+        if (item == null)
+            throw new ArgumentNullException(nameof(item));
+            
+        _inventory.Add(item);
+    }
+    
+    /// <summary>
+    /// Remove an item from the player's inventory
+    /// </summary>
+    /// <param name="item">Item to remove</param>
+    /// <returns>True if the item was found and removed, false otherwise</returns>
+    public bool RemoveFromInventory(WorldObject item)
+    {
+        if (item == null)
+            return false;
+            
+        return _inventory.Remove(item);
+    }
+    
+    /// <summary>
+    /// Remove an item from inventory by virtual number
+    /// </summary>
+    /// <param name="vnum">Virtual number of item to remove</param>
+    /// <returns>The removed item, or null if not found</returns>
+    public WorldObject? RemoveFromInventory(int vnum)
+    {
+        var item = _inventory.FirstOrDefault(i => i.VirtualNumber == vnum);
+        if (item != null)
+        {
+            _inventory.Remove(item);
+        }
+        return item;
+    }
+    
+    /// <summary>
+    /// Find an item in inventory or equipment by virtual number
+    /// This matches CircleMUD's get_obj_list_vis behavior for searching player possessions
+    /// </summary>
+    /// <param name="vnum">Virtual number to search for</param>
+    /// <returns>The found item, or null if not found</returns>
+    public WorldObject? FindItem(int vnum)
+    {
+        // First check equipped items
+        foreach (var equippedItem in _equipment.Values)
+        {
+            if (equippedItem != null && equippedItem.VirtualNumber == vnum)
+                return equippedItem;
+        }
+        
+        // Then check inventory
+        return _inventory.FirstOrDefault(item => item.VirtualNumber == vnum);
+    }
+    
+    /// <summary>
+    /// Find an item in inventory or equipment by name keywords
+    /// This matches CircleMUD's get_obj_list_vis behavior for name matching
+    /// </summary>
+    /// <param name="name">Name or keywords to search for</param>
+    /// <returns>The found item, or null if not found</returns>
+    public WorldObject? FindItem(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+            
+        var searchName = name.Trim().ToLower();
+        
+        // First check equipped items
+        foreach (var equippedItem in _equipment.Values)
+        {
+            if (equippedItem != null && IsNameMatch(searchName, equippedItem.Name))
+                return equippedItem;
+        }
+        
+        // Then check inventory
+        return _inventory.FirstOrDefault(item => IsNameMatch(searchName, item.Name));
+    }
+    
+    /// <summary>
+    /// Matches name keywords similar to CircleMUD's isname() function
+    /// </summary>
+    /// <param name="searchName">Name being searched for (already lowercased)</param>
+    /// <param name="itemName">Item's name string containing keywords</param>
+    /// <returns>True if the search name matches any keyword in the item name</returns>
+    private bool IsNameMatch(string searchName, string itemName)
+    {
+        if (string.IsNullOrWhiteSpace(searchName) || string.IsNullOrWhiteSpace(itemName))
+            return false;
+            
+        var keywords = itemName.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var keyword in keywords)
+        {
+            if (keyword.StartsWith(searchName))
+                return true;
+        }
+        
+        return false;
     }
 
     public override bool Equals(object? obj)

@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using C3Mud.Core.World.Models;
 using C3Mud.Core.World.Parsers;
+using C3Mud.Core.Services;
 
 namespace C3Mud.Core.World.Services;
 
@@ -17,12 +18,15 @@ public class WorldDatabase : IWorldDatabase
     private readonly IMobileSpawner _mobileSpawner;
     private readonly IObjectInstanceManager _objectInstanceManager;
     private readonly IObjectSpawner _objectSpawner;
+    private readonly IRoomPlayerManager _roomPlayerManager;
+    private readonly Random _weatherRandom;
     
     /// <summary>
     /// Initializes a new WorldDatabase with empty room storage
     /// </summary>
     public WorldDatabase(IMobileInstanceManager? mobileInstanceManager = null, IMobileSpawner? mobileSpawner = null, 
-                        IObjectInstanceManager? objectInstanceManager = null, IObjectSpawner? objectSpawner = null)
+                        IObjectInstanceManager? objectInstanceManager = null, IObjectSpawner? objectSpawner = null,
+                        IRoomPlayerManager? roomPlayerManager = null)
     {
         _rooms = new ConcurrentDictionary<int, Room>();
         _parser = new WorldFileParser();
@@ -30,6 +34,8 @@ public class WorldDatabase : IWorldDatabase
         _mobileSpawner = mobileSpawner ?? new MobileSpawner();
         _objectInstanceManager = objectInstanceManager ?? new ObjectInstanceManager();
         _objectSpawner = objectSpawner ?? new ObjectSpawner();
+        _roomPlayerManager = roomPlayerManager ?? new BasicRoomPlayerManager();
+        _weatherRandom = new Random();
     }
     
     /// <summary>
@@ -262,25 +268,33 @@ public class WorldDatabase : IWorldDatabase
     }
     
     /// <summary>
-    /// Sets the state of a door in a room (placeholder implementation)
+    /// Sets the state of a door in a room
+    /// Properly modifies the exit's door flags based on the CircleMUD door system
+    /// Door flags: 0=no door, 1=door exists, 2=door pickproof, bit combinations for states
     /// </summary>
     public void SetDoorState(Room room, Direction direction, DoorState doorState)
     {
-        // TODO: Implement door state management
-        // This would typically modify the exit's door flags
         if (room.Exits.TryGetValue(direction, out var exit))
         {
-            // Set door state based on DoorState enum
+            // Set door state based on DoorState enum and CircleMUD door flag system
+            // Original CircleMUD uses bitflags: EX_ISDOOR(1), EX_CLOSED(2), EX_LOCKED(4)
             switch (doorState)
             {
                 case DoorState.Open:
-                    exit.DoorFlags = 0; // Clear door flags
+                    // Door exists but is open - clear closed and locked flags but keep door flag
+                    exit.DoorFlags = (exit.DoorFlags & ~2) & ~4; // Clear closed(2) and locked(4) bits
+                    if (exit.DoorFlags == 0) exit.DoorFlags = 1; // Ensure door flag exists
                     break;
+                    
                 case DoorState.Closed:
-                    exit.DoorFlags = 1; // Set closed flag
+                    // Door exists and is closed but not locked
+                    exit.DoorFlags = (exit.DoorFlags | 1) | 2; // Set door(1) and closed(2) flags
+                    exit.DoorFlags = exit.DoorFlags & ~4; // Clear locked(4) flag
                     break;
+                    
                 case DoorState.Locked:
-                    exit.DoorFlags = 3; // Set closed and locked flags
+                    // Door exists, is closed, and is locked
+                    exit.DoorFlags = (exit.DoorFlags | 1) | 2 | 4; // Set door(1), closed(2), and locked(4) flags
                     break;
             }
         }
@@ -357,22 +371,69 @@ public class WorldDatabase : IWorldDatabase
     }
     
     /// <summary>
-    /// Counts players currently in a zone (placeholder implementation)
+    /// Counts players currently in a zone
+    /// Uses the room player manager to count players in all rooms within the specified zone
     /// </summary>
     public int CountPlayersInZone(int zoneNumber)
     {
-        // TODO: Implement player counting
-        // This would count active players in the zone
-        return 0; // Placeholder - always return 0 for now
+        // Get all rooms in the zone (standard MUD convention: vnum / 100 == zone number)
+        var roomsInZone = _rooms.Values
+            .Where(room => room.VirtualNumber / 100 == zoneNumber)
+            .ToList();
+        
+        // Count players in each room of the zone
+        var totalPlayers = 0;
+        foreach (var room in roomsInZone)
+        {
+            var playersInRoom = _roomPlayerManager.GetPlayersInRoom(room.VirtualNumber);
+            totalPlayers += playersInRoom.Count();
+        }
+        
+        return totalPlayers;
     }
     
     /// <summary>
     /// Gets the current weather description for outdoor areas
+    /// Uses time-based and random variation to provide different weather states
+    /// Based on CircleMUD weather system with SKY_CLOUDLESS, SKY_CLOUDY, SKY_RAINING, SKY_LIGHTNING
     /// </summary>
     public string GetCurrentWeather()
     {
-        // TODO: Implement proper weather system
-        // For now, return a placeholder weather description
-        return "The sky is clear.";
+        // Create a pseudo-weather system based on time and randomness
+        var currentHour = DateTime.Now.Hour;
+        var randomFactor = _weatherRandom.Next(0, 100);
+        
+        // Weather patterns based on time of day and randomness
+        // Morning (6-12): Generally clear to cloudy
+        // Afternoon (12-18): More variable weather
+        // Evening (18-24): Often stormy
+        // Night (0-6): Usually clear or light weather
+        
+        if (currentHour >= 6 && currentHour < 12) // Morning
+        {
+            if (randomFactor < 60) return "The sky is clear.";
+            if (randomFactor < 85) return "It is cloudy.";
+            return "It is raining.";
+        }
+        else if (currentHour >= 12 && currentHour < 18) // Afternoon
+        {
+            if (randomFactor < 40) return "The sky is clear.";
+            if (randomFactor < 60) return "It is cloudy.";
+            if (randomFactor < 85) return "It is raining.";
+            return "Lightning flashes across the sky.";
+        }
+        else if (currentHour >= 18 && currentHour < 24) // Evening
+        {
+            if (randomFactor < 30) return "The sky is clear.";
+            if (randomFactor < 50) return "It is cloudy.";
+            if (randomFactor < 75) return "It is raining.";
+            return "Lightning flashes across the sky.";
+        }
+        else // Night (0-6)
+        {
+            if (randomFactor < 70) return "The sky is clear.";
+            if (randomFactor < 90) return "It is cloudy.";
+            return "It is raining.";
+        }
     }
 }

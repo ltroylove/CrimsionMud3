@@ -58,14 +58,40 @@ public class MobileSpawner : IMobileSpawner
         if (worldObject == null)
             throw new ArgumentNullException(nameof(worldObject));
             
-        // TODO: Implement equipment system
-        // For now, just log the action (placeholder)
-        // In a full implementation, this would:
-        // - Check if wear position is valid
-        // - Check if mobile can wear the object
-        // - Remove existing equipment from that slot
-        // - Add object to mobile's equipment slots
-        Console.WriteLine($"Equipped {worldObject.ShortDescription} on mobile {mobileInstance.Template.ShortDescription} at position {wearPosition}");
+        // Create object instance for the equipment
+        var objectInstance = new ObjectInstance
+        {
+            InstanceId = Guid.NewGuid(),
+            Template = worldObject,
+            Condition = 100, // Default to full condition
+            IsActive = true,
+            // Location will be set by the mobile instance location
+        };
+        
+        // Validate wear position
+        if (!Enum.IsDefined(typeof(WearPosition), wearPosition))
+            return; // Invalid position
+            
+        var position = (WearPosition)wearPosition;
+        
+        // Check if mobile can wear this object
+        if (!mobileInstance.CanWear(objectInstance))
+            return; // Object cannot be worn
+            
+        // Remove existing equipment from that slot if any
+        if (mobileInstance.Equipment.ContainsKey(position))
+        {
+            // Move existing equipment to inventory if possible
+            var existingItem = mobileInstance.Equipment[position];
+            if (mobileInstance.CanCarry(existingItem))
+            {
+                mobileInstance.Inventory.Add(existingItem);
+            }
+            mobileInstance.Equipment.Remove(position);
+        }
+        
+        // Equip the new object
+        mobileInstance.Equipment[position] = objectInstance;
     }
     
     /// <summary>
@@ -80,12 +106,26 @@ public class MobileSpawner : IMobileSpawner
         if (worldObject == null)
             throw new ArgumentNullException(nameof(worldObject));
             
-        // TODO: Implement inventory system
-        // For now, just log the action (placeholder)
-        // In a full implementation, this would:
-        // - Check carrying capacity
-        // - Add object to mobile's inventory list
-        // - Handle weight/size restrictions
-        Console.WriteLine($"Gave {worldObject.ShortDescription} to mobile {mobileInstance.Template.ShortDescription}");
+        // Create object instance for the inventory item
+        var objectInstance = new ObjectInstance
+        {
+            InstanceId = Guid.NewGuid(),
+            Template = worldObject,
+            Condition = 100, // Default to full condition
+            IsActive = true,
+            // Location will be set by the mobile instance location
+        };
+        
+        // Check if mobile can carry this object
+        if (!mobileInstance.CanCarry(objectInstance))
+            return; // Mobile cannot carry this object
+            
+        // Basic carrying capacity check (could be enhanced with weight/strength calculations)
+        const int maxInventoryItems = 50; // Reasonable limit for mobile inventory
+        if (mobileInstance.Inventory.Count >= maxInventoryItems)
+            return; // Mobile's inventory is full
+            
+        // Add object to mobile's inventory
+        mobileInstance.Inventory.Add(objectInstance);
     }
 }

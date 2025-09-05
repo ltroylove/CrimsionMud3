@@ -161,7 +161,7 @@ public interface IPlayer
     /// Legacy player file data containing all character statistics
     /// Used for score display and character persistence
     /// </summary>
-    LegacyPlayerFileData LegacyPlayerFileData { get; set; }
+    LegacyPlayerFileData? LegacyPlayerFileData { get; set; }
     
     /// <summary>
     /// Send a message to the player

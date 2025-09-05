@@ -592,8 +592,8 @@ public class LegacyEquipmentCompatibilityTests
             { "Dexterity", player.Dexterity },
             { "Constitution", player.Constitution },
             { "ArmorClass", player.ArmorClass },
-            { "Hitroll", 0 }, // TODO: Get from player when implemented
-            { "Damroll", 0 }  // TODO: Get from player when implemented
+            { "Hitroll", 0 }, // Will be implemented in Iteration 7 (Magic System) - equipment stat bonuses
+            { "Damroll", 0 }  // Will be implemented in Iteration 7 (Magic System) - equipment stat bonuses
         };
     }
 

@@ -6,5 +6,5 @@ namespace C3Mud.Core.Spells;
 /// </summary>
 public interface ISpellEngine
 {
-    // TODO: Implement spell system in future iterations
+    // Will be implemented in Iteration 7: Magic System & Spell Implementation
 }
