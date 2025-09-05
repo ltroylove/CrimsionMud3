@@ -242,10 +242,10 @@ public class EquipmentManager : IEquipmentManager
         var playerClass = _player.GetCharacterClass();
         
         // Check anti-class flags (original ITEM_ANTI_* flags)
-        var antiMage = (item.ExtraFlags & (1 << 7)) != 0; // ITEM_ANTI_MAGIC_USER
-        var antiCleric = (item.ExtraFlags & (1 << 8)) != 0; // ITEM_ANTI_CLERIC
-        var antiThief = (item.ExtraFlags & (1 << 9)) != 0; // ITEM_ANTI_THIEF
-        var antiWarrior = (item.ExtraFlags & (1 << 10)) != 0; // ITEM_ANTI_WARRIOR
+        var antiMage = (item.ExtraFlags & (1 << 10)) != 0; // ITEM_ANTI_MAGIC_USER - FIXED from bit 7
+        var antiCleric = (item.ExtraFlags & (1 << 11)) != 0; // ITEM_ANTI_CLERIC - FIXED from bit 8
+        var antiThief = (item.ExtraFlags & (1 << 12)) != 0; // ITEM_ANTI_THIEF - FIXED from bit 9
+        var antiWarrior = (item.ExtraFlags & (1 << 13)) != 0; // ITEM_ANTI_WARRIOR - FIXED from bit 10
         
         return playerClass switch
         {
