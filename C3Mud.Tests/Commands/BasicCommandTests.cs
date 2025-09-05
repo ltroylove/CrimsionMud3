@@ -52,16 +52,16 @@ public class BasicCommandTests
     }
 
     [Fact]
-    public async Task LookCommand_WithArguments_ShouldShowNotFound()
+    public async Task LookCommand_WithArguments_ShouldShowVoidWithoutWorldDatabase()
     {
-        // Arrange
+        // Arrange - Using old constructor without WorldDatabase
         var command = new LookCommand();
 
         // Act
         await command.ExecuteAsync(_mockPlayer.Object, "sword", 15);
 
-        // Assert
-        _mockPlayer.Verify(p => p.SendMessageAsync("You don't see that here."), Times.Once);
+        // Assert - Without WorldDatabase, player is in the void
+        _mockPlayer.Verify(p => p.SendMessageAsync("You are floating in the void!"), Times.Once);
     }
 
     [Fact]

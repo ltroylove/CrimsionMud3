@@ -87,6 +87,21 @@ public class WorldObject
     public Dictionary<string, string> ExtraDescriptions { get; set; } = new Dictionary<string, string>();
     
     /// <summary>
+    /// Contents of this object (for containers, corpses, etc.)
+    /// </summary>
+    public List<WorldObject> Contents { get; set; } = new List<WorldObject>();
+    
+    /// <summary>
+    /// Decay time for temporary objects like corpses
+    /// </summary>
+    public DateTime DecayTime { get; set; } = DateTime.MaxValue;
+    
+    /// <summary>
+    /// Gold/money contained within this object (for corpses, purses, etc.)
+    /// </summary>
+    public int Gold { get; set; } = 0;
+    
+    /// <summary>
     /// Creates a copy of this object template for instantiation in the game world
     /// </summary>
     /// <returns>A new WorldObject instance based on this template</returns>
@@ -107,7 +122,10 @@ public class WorldObject
             RentPerDay = this.RentPerDay,
             Values = (int[])this.Values.Clone(),
             Applies = new Dictionary<int, int>(this.Applies),
-            ExtraDescriptions = new Dictionary<string, string>(this.ExtraDescriptions)
+            ExtraDescriptions = new Dictionary<string, string>(this.ExtraDescriptions),
+            Contents = new List<WorldObject>(),
+            DecayTime = this.DecayTime,
+            Gold = this.Gold
         };
     }
 }

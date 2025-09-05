@@ -36,4 +36,9 @@ public class Exit
     /// Virtual number of key needed to unlock this exit (-1 = no key needed)
     /// </summary>
     public int KeyVnum { get; set; } = -1;
+    
+    /// <summary>
+    /// Special exit flags (hidden, secret, etc.)
+    /// </summary>
+    public ExitFlags ExitFlags { get; set; }
 }

@@ -1,3 +1,5 @@
+using C3Mud.Core.Players;
+
 namespace C3Mud.Core.World.Models;
 
 /// <summary>
@@ -55,6 +57,36 @@ public class Room
     /// Hit point regeneration rate in this room
     /// </summary>
     public int HpRegen { get; set; }
+    
+    /// <summary>
+    /// Maximum number of players allowed in this room (0 = unlimited)
+    /// </summary>
+    public int MaxPlayers { get; set; }
+    
+    /// <summary>
+    /// Minimum level required to enter this room (0 = no restriction)
+    /// </summary>
+    public int MinimumLevel { get; set; }
+    
+    /// <summary>
+    /// Players currently in this room
+    /// </summary>
+    public List<IPlayer> Players { get; set; } = new List<IPlayer>();
+    
+    /// <summary>
+    /// Hidden objects that can be found by searching
+    /// </summary>
+    public List<WorldObject> HiddenObjects { get; set; } = new List<WorldObject>();
+    
+    /// <summary>
+    /// Objects/items currently in this room
+    /// </summary>
+    public List<WorldObject> Objects { get; set; } = new List<WorldObject>();
+    
+    /// <summary>
+    /// Features that can be examined in detail (e.g., "walls", "floor")
+    /// </summary>
+    public Dictionary<string, string> ExaminableFeatures { get; set; } = new Dictionary<string, string>();
     
     /// <summary>
     /// Gets an exit in the specified direction, or null if no exit exists
