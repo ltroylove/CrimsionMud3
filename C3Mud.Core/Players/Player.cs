@@ -16,6 +16,7 @@ public class Player : IPlayer, ICharacter
     public string Id { get; }
     public string Name { get; set; } = string.Empty;
     public int Level { get; set; } = 1;
+    public Race Race { get; set; } = Race.Human;
     public PlayerPosition Position { get; set; } = PlayerPosition.Standing;
     public bool IsConnected => Connection?.IsConnected ?? false;
     public IConnectionDescriptor? Connection { get; set; }

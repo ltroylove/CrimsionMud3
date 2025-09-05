@@ -891,7 +891,7 @@ public class EquipmentCommandTests
             ShortDescription = "a sharp longsword",
             LongDescription = "A sharp longsword has been left here.",
             ObjectType = ObjectType.WEAPON,
-            WearFlags = (1 << 16), // ITEM_WEAR_WIELD
+            WearFlags = (long)WearFlags.WIELD,
             Weight = 15,
             Cost = 100,
             Values = new int[] { 2, 4, 2, 3 }
@@ -985,8 +985,8 @@ public class EquipmentCommandTests
             ShortDescription = "a massive two-handed sword",
             LongDescription = "A massive two-handed sword lies here.",
             ObjectType = ObjectType.WEAPON,
-            WearFlags = (1 << 16), // ITEM_WEAR_WIELD
-            ExtraFlags = (1 << 17), // ITEM_TWO_HANDED (custom flag)
+            WearFlags = (long)WearFlags.WIELD,
+            ExtraFlags = (long)ExtraFlags.TWO_HANDED,
             Weight = 25,
             Values = new int[] { 3, 8, 4, 3 }
         };
@@ -1002,7 +1002,7 @@ public class EquipmentCommandTests
             LongDescription = "A cursed black ring pulses with dark energy.",
             ObjectType = ObjectType.WORN,
             WearFlags = (1 << 1) | (1 << 2), // ITEM_WEAR_FINGER
-            ExtraFlags = (1 << 2) | (1 << 3), // ITEM_NODROP | ITEM_CURSED
+            ExtraFlags = (long)(ExtraFlags.NODROP | ExtraFlags.CURSED),
             Weight = 1,
             Cost = 0
         };

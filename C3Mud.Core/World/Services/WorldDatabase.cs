@@ -276,27 +276,30 @@ public class WorldDatabase : IWorldDatabase
     {
         if (room.Exits.TryGetValue(direction, out var exit))
         {
-            // Set door state based on DoorState enum and CircleMUD door flag system
-            // Original CircleMUD uses bitflags: EX_ISDOOR(1), EX_CLOSED(2), EX_LOCKED(4)
+            // Set door state based on DoorState enum using modern C# flag patterns
+            // Based on original CircleMUD EX_ISDOOR, EX_CLOSED, EX_LOCKED flags
+            var currentFlags = (DoorFlags)exit.DoorFlags;
+            
             switch (doorState)
             {
                 case DoorState.Open:
                     // Door exists but is open - clear closed and locked flags but keep door flag
-                    exit.DoorFlags = (exit.DoorFlags & ~2) & ~4; // Clear closed(2) and locked(4) bits
-                    if (exit.DoorFlags == 0) exit.DoorFlags = 1; // Ensure door flag exists
+                    currentFlags = currentFlags & ~DoorFlags.CLOSED & ~DoorFlags.LOCKED;
+                    currentFlags |= DoorFlags.ISDOOR; // Ensure door flag exists
                     break;
                     
                 case DoorState.Closed:
                     // Door exists and is closed but not locked
-                    exit.DoorFlags = (exit.DoorFlags | 1) | 2; // Set door(1) and closed(2) flags
-                    exit.DoorFlags = exit.DoorFlags & ~4; // Clear locked(4) flag
+                    currentFlags = (currentFlags | DoorFlags.ISDOOR | DoorFlags.CLOSED) & ~DoorFlags.LOCKED;
                     break;
                     
                 case DoorState.Locked:
                     // Door exists, is closed, and is locked
-                    exit.DoorFlags = (exit.DoorFlags | 1) | 2 | 4; // Set door(1), closed(2), and locked(4) flags
+                    currentFlags = currentFlags | DoorFlags.ISDOOR | DoorFlags.CLOSED | DoorFlags.LOCKED;
                     break;
             }
+            
+            exit.DoorFlags = (int)currentFlags;
         }
     }
     

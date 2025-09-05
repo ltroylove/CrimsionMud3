@@ -1,6 +1,7 @@
 using C3Mud.Core.Equipment.Models;
 using C3Mud.Core.Players;
 using C3Mud.Core.World.Models;
+using C3Mud.Core.World.Services;
 using C3Mud.Core.Characters.Models;
 using System.Text;
 
@@ -13,6 +14,7 @@ namespace C3Mud.Core.Equipment.Services;
 public class EquipmentManager : IEquipmentManager
 {
     private readonly IPlayer _player;
+    private readonly IWorldDatabase? _worldDatabase;
     
     /// <summary>
     /// Strength-based carrying capacity table from original CircleMUD
@@ -26,9 +28,10 @@ public class EquipmentManager : IEquipmentManager
         { 23, 700 }, { 24, 800 }, { 25, 640 }
     };
 
-    public EquipmentManager(IPlayer player)
+    public EquipmentManager(IPlayer player, IWorldDatabase? worldDatabase = null)
     {
         _player = player ?? throw new ArgumentNullException(nameof(player));
+        _worldDatabase = worldDatabase;
     }
 
     public EquipmentOperationResult EquipItem(WorldObject item, EquipmentSlot slot)
@@ -52,6 +55,15 @@ public class EquipmentManager : IEquipmentManager
         if (!CanUseItem(item))
         {
             return GetRestrictionFailureMessage(item);
+        }
+        
+        // Check extra attack restrictions (only one extra attack item allowed)
+        if (HasExtraAttackApply(item))
+        {
+            if (HasEquippedExtraAttackItem())
+            {
+                return EquipmentOperationResult.CreateFailure("You can only wear one extra attack item at a time!");
+            }
         }
         
         // Check for two-handed weapon conflicts
@@ -78,6 +90,12 @@ public class EquipmentManager : IEquipmentManager
         {
             messages.Add(GetUnequipMessage(currentItem, slot));
             
+            // Handle light source management if this is a light slot
+            if (slot == EquipmentSlot.Light && _worldDatabase != null)
+            {
+                LightSourceManager.OnLightSourceUnequipped(_player, currentItem, _worldDatabase);
+            }
+            
             // Move old item to inventory
             _player.GetInventory().Add(currentItem);
         }
@@ -86,6 +104,12 @@ public class EquipmentManager : IEquipmentManager
         if (_player is Player playerImpl)
         {
             playerImpl.SetEquippedItem(slot, item);
+        }
+        
+        // Handle light source management if this is a light slot
+        if (slot == EquipmentSlot.Light && _worldDatabase != null)
+        {
+            LightSourceManager.OnLightSourceEquipped(_player, item, _worldDatabase);
         }
         
         // Remove from inventory if present
@@ -156,7 +180,7 @@ public class EquipmentManager : IEquipmentManager
 
     public bool CanEquipInSlot(WorldObject item, EquipmentSlot slot)
     {
-        return EquipmentSlotValidator.CanWearInSlot(item, slot);
+        return EquipmentSlotValidator.CanWearInSlot(item, slot, _player.Race);
     }
 
     public string GetEquipmentDisplay()
@@ -241,11 +265,12 @@ public class EquipmentManager : IEquipmentManager
     {
         var playerClass = _player.GetCharacterClass();
         
-        // Check anti-class flags (original ITEM_ANTI_* flags)
-        var antiMage = (item.ExtraFlags & (1 << 10)) != 0; // ITEM_ANTI_MAGIC_USER - FIXED from bit 7
-        var antiCleric = (item.ExtraFlags & (1 << 11)) != 0; // ITEM_ANTI_CLERIC - FIXED from bit 8
-        var antiThief = (item.ExtraFlags & (1 << 12)) != 0; // ITEM_ANTI_THIEF - FIXED from bit 9
-        var antiWarrior = (item.ExtraFlags & (1 << 13)) != 0; // ITEM_ANTI_WARRIOR - FIXED from bit 10
+        // Check anti-class flags using modern C# enum patterns
+        var extraFlags = (ExtraFlags)item.ExtraFlags;
+        var antiMage = extraFlags.HasFlag(ExtraFlags.ANTI_MAGIC_USER);
+        var antiCleric = extraFlags.HasFlag(ExtraFlags.ANTI_CLERIC);
+        var antiThief = extraFlags.HasFlag(ExtraFlags.ANTI_THIEF);
+        var antiWarrior = extraFlags.HasFlag(ExtraFlags.ANTI_WARRIOR);
         
         return playerClass switch
         {
@@ -261,10 +286,11 @@ public class EquipmentManager : IEquipmentManager
     {
         var alignment = _player.GetAlignment();
         
-        // Check anti-alignment flags
-        var antiGood = (item.ExtraFlags & (1 << 11)) != 0; // ITEM_ANTI_GOOD
-        var antiEvil = (item.ExtraFlags & (1 << 12)) != 0; // ITEM_ANTI_EVIL
-        var antiNeutral = (item.ExtraFlags & (1 << 13)) != 0; // ITEM_ANTI_NEUTRAL
+        // Check anti-alignment flags using modern C# enum patterns
+        var extraFlags = (ExtraFlags)item.ExtraFlags;
+        var antiGood = extraFlags.HasFlag(ExtraFlags.ANTI_GOOD);
+        var antiEvil = extraFlags.HasFlag(ExtraFlags.ANTI_EVIL);
+        var antiNeutral = extraFlags.HasFlag(ExtraFlags.ANTI_NEUTRAL);
         
         return alignment switch
         {
@@ -341,14 +367,16 @@ public class EquipmentManager : IEquipmentManager
     
     private bool IsTwoHanded(WorldObject item)
     {
-        // Check for two-handed flag
-        return (item.ExtraFlags & (1 << 17)) != 0; // ITEM_TWO_HANDED
+        // Check for two-handed flag using modern C# enum patterns
+        var extraFlags = (ExtraFlags)item.ExtraFlags;
+        return extraFlags.HasFlag(ExtraFlags.TWO_HANDED);
     }
     
     private bool IsCursed(WorldObject item)
     {
-        // Check for cursed flag
-        return (item.ExtraFlags & (1 << 2)) != 0; // ITEM_CURSED
+        // Check for cursed flag using modern C# enum patterns
+        var extraFlags = (ExtraFlags)item.ExtraFlags;
+        return extraFlags.HasFlag(ExtraFlags.CURSED);
     }
     
     private void ApplyEquipmentBonuses(WorldObject item)
@@ -436,6 +464,38 @@ public class EquipmentManager : IEquipmentManager
             EquipmentSlot.Light => $"You extinguish {item.ShortDescription}.",
             _ => $"You stop wearing {item.ShortDescription}."
         };
+    }
+    
+    /// <summary>
+    /// Check if an item has extra attack apply
+    /// Based on original CircleMUD obj_has_apply() function
+    /// </summary>
+    /// <param name="item">Item to check</param>
+    /// <returns>True if item grants extra attacks</returns>
+    private bool HasExtraAttackApply(WorldObject item)
+    {
+        return item.Applies.ContainsKey((int)ApplyType.EXTRA_ATTACKS) && 
+               item.Applies[(int)ApplyType.EXTRA_ATTACKS] > 0;
+    }
+    
+    /// <summary>
+    /// Check if player already has an extra attack item equipped
+    /// Based on original CircleMUD char_wearing_apply_limit() function
+    /// </summary>
+    /// <returns>True if player has extra attack item equipped</returns>
+    private bool HasEquippedExtraAttackItem()
+    {
+        var equipment = _player.GetEquipment();
+        
+        foreach (var equippedItem in equipment.Values)
+        {
+            if (equippedItem != null && HasExtraAttackApply(equippedItem))
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     #endregion

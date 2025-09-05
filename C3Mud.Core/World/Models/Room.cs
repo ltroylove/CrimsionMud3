@@ -49,6 +49,12 @@ public class Room
     public int LightLevel { get; set; }
     
     /// <summary>
+    /// Number of active light sources in this room (torches, lanterns, etc.)
+    /// Based on original CircleMUD world[room].light counter
+    /// </summary>
+    public int LightSources { get; set; }
+    
+    /// <summary>
     /// Mana regeneration rate in this room
     /// </summary>
     public int ManaRegen { get; set; }

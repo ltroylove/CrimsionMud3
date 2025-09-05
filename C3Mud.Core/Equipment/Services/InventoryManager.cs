@@ -218,8 +218,9 @@ public class InventoryManager : IInventoryManager
             return EquipmentOperationResult.CreateFailure("You don't have that item.");
         }
         
-        // Check for NODROP flag
-        if ((item.ExtraFlags & (1 << 2)) != 0) // ITEM_NODROP
+        // Check for NODROP flag using modern C# enum patterns
+        var extraFlags = (ExtraFlags)item.ExtraFlags;
+        if (extraFlags.HasFlag(ExtraFlags.NODROP))
         {
             return EquipmentOperationResult.CreateFailure("You can't drop that item.");
         }

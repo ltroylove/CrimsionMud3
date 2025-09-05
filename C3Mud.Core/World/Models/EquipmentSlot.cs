@@ -94,5 +94,20 @@ public enum EquipmentSlot
     /// <summary>
     /// Held item (left hand when not using shield)
     /// </summary>
-    Hold = 17
+    Hold = 17,
+    
+    /// <summary>
+    /// Tail slot (for races with tails)
+    /// </summary>
+    Tail = 18,
+    
+    /// <summary>
+    /// First four-legs slot (for quadruped races)
+    /// </summary>
+    FourLegs1 = 19,
+    
+    /// <summary>
+    /// Second four-legs slot (for quadruped races)
+    /// </summary>
+    FourLegs2 = 20
 }
