@@ -143,8 +143,8 @@ public class LegacyEquipmentCompatibilityTests
             { "ITEM_WEAR_ABOUT", 1L << 10 },
             { "ITEM_WEAR_WAIST", 1L << 11 },
             { "ITEM_WEAR_WRIST", 1L << 12 },
-            { "ITEM_WEAR_WIELD", 1L << 13 },
-            { "ITEM_WEAR_HOLD", 1L << 14 }
+            { "ITEM_WIELD", 1L << 13 },
+            { "ITEM_HOLD", 1L << 14 }
         };
 
         foreach (var flagTest in _legacyTestData.WearFlagBitTests)
@@ -466,7 +466,7 @@ public class LegacyEquipmentCompatibilityTests
         {
             new() { FlagName = "ITEM_WEAR_TAKE", ExpectedBitValue = 1L << 0 },
             new() { FlagName = "ITEM_WEAR_FINGER", ExpectedBitValue = 1L << 1 },
-            new() { FlagName = "ITEM_WEAR_WIELD", ExpectedBitValue = 1L << 13 }
+            new() { FlagName = "ITEM_WIELD", ExpectedBitValue = 1L << 13 }
         };
     }
 
