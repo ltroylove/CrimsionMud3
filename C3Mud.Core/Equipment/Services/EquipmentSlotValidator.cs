@@ -37,24 +37,24 @@ public static class EquipmentSlotValidator
     {
         return slot switch
         {
-            EquipmentSlot.Light => 0,        // ITEM_WEAR_LIGHT
-            EquipmentSlot.FingerRight => 1,  // ITEM_WEAR_FINGER
-            EquipmentSlot.FingerLeft => 1,   // ITEM_WEAR_FINGER (same as right)
-            EquipmentSlot.Neck1 => 3,        // ITEM_WEAR_NECK
-            EquipmentSlot.Neck2 => 3,        // ITEM_WEAR_NECK (same as neck1)
-            EquipmentSlot.Body => 5,         // ITEM_WEAR_BODY
-            EquipmentSlot.Head => 6,         // ITEM_WEAR_HEAD
-            EquipmentSlot.Legs => 7,         // ITEM_WEAR_LEGS
-            EquipmentSlot.Feet => 8,         // ITEM_WEAR_FEET
-            EquipmentSlot.Hands => 9,        // ITEM_WEAR_HANDS
-            EquipmentSlot.Arms => 10,        // ITEM_WEAR_ARMS
-            EquipmentSlot.Shield => 11,      // ITEM_WEAR_SHIELD
-            EquipmentSlot.About => 12,       // ITEM_WEAR_ABOUT
-            EquipmentSlot.Waist => 13,       // ITEM_WEAR_WAIST
-            EquipmentSlot.WristRight => 14,  // ITEM_WEAR_WRIST
-            EquipmentSlot.WristLeft => 14,   // ITEM_WEAR_WRIST (same as right)
-            EquipmentSlot.Wield => 16,       // ITEM_WEAR_WIELD
-            EquipmentSlot.Hold => 17,        // ITEM_WEAR_HOLD
+            EquipmentSlot.Light => 0,        // ITEM_WEAR_LIGHT (BIT0)
+            EquipmentSlot.FingerRight => 1,  // ITEM_WEAR_FINGER (BIT1)
+            EquipmentSlot.FingerLeft => 1,   // ITEM_WEAR_FINGER (BIT1, same as right)
+            EquipmentSlot.Neck1 => 2,        // ITEM_WEAR_NECK (BIT2) - FIXED from 3
+            EquipmentSlot.Neck2 => 2,        // ITEM_WEAR_NECK (BIT2, same as neck1) - FIXED from 3
+            EquipmentSlot.Body => 3,         // ITEM_WEAR_BODY (BIT3) - FIXED from 5
+            EquipmentSlot.Head => 4,         // ITEM_WEAR_HEAD (BIT4) - FIXED from 6
+            EquipmentSlot.Legs => 5,         // ITEM_WEAR_LEGS (BIT5) - FIXED from 7
+            EquipmentSlot.Feet => 6,         // ITEM_WEAR_FEET (BIT6) - FIXED from 8
+            EquipmentSlot.Hands => 7,        // ITEM_WEAR_HANDS (BIT7) - FIXED from 9
+            EquipmentSlot.Arms => 8,         // ITEM_WEAR_ARMS (BIT8) - FIXED from 10
+            EquipmentSlot.Shield => 9,       // ITEM_WEAR_SHIELD (BIT9) - FIXED from 11
+            EquipmentSlot.About => 10,       // ITEM_WEAR_ABOUT (BIT10) - FIXED from 12
+            EquipmentSlot.Waist => 11,       // ITEM_WEAR_WAISTE (BIT11) - FIXED from 13
+            EquipmentSlot.WristRight => 12,  // ITEM_WEAR_WRIST (BIT12) - FIXED from 14
+            EquipmentSlot.WristLeft => 12,   // ITEM_WEAR_WRIST (BIT12, same as right) - FIXED from 14
+            EquipmentSlot.Wield => -1,       // ITEM_WIELD - Not a wear flag, handled separately
+            EquipmentSlot.Hold => -1,        // ITEM_HOLD - Not a wear flag, handled separately
             _ => -1
         };
     }
