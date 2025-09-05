@@ -29,7 +29,8 @@
       "Bash(cp:*)",
       "Bash(csc:*)",
       "Bash(./test-data-loading.exe)",
-      "Bash(dotnet new:*)"
+      "Bash(dotnet new:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
