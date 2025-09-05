@@ -29,10 +29,20 @@ public class Player : IPlayer, ICharacter
     public CharacterType Type => CharacterType.Player;
     public ICharacter? Fighting { get; set; }
     public bool IsInCombat => Fighting != null;
+    
+    // Equipment and inventory storage
+    private readonly Dictionary<EquipmentSlot, WorldObject?> _equipment = new();
+    private readonly List<WorldObject> _inventory = new();
 
     public Player(string id)
     {
         Id = id;
+        
+        // Initialize all equipment slots to null
+        foreach (EquipmentSlot slot in Enum.GetValues<EquipmentSlot>())
+        {
+            _equipment[slot] = null;
+        }
     }
 
     public Player(string id, IConnectionDescriptor connection) : this(id)
@@ -91,14 +101,12 @@ public class Player : IPlayer, ICharacter
 
     public WorldObject? GetWieldedWeapon()
     {
-        // TODO: Implement equipment system
-        return null;
+        return _equipment.GetValueOrDefault(EquipmentSlot.Wield);
     }
 
     public WorldObject? GetEquippedItem(EquipmentSlot slot)
     {
-        // TODO: Implement equipment system
-        return null;
+        return _equipment.GetValueOrDefault(slot);
     }
 
     public int GetSkillLevel(string skillName)
@@ -109,8 +117,31 @@ public class Player : IPlayer, ICharacter
 
     public List<WorldObject> GetInventory()
     {
-        // TODO: Implement inventory system
-        return new List<WorldObject>();
+        return _inventory;
+    }
+
+    public CharacterClass GetCharacterClass()
+    {
+        // TODO: Implement proper character class system
+        // For now, return warrior as default
+        return CharacterClass.Warrior;
+    }
+
+    public Alignment GetAlignment()
+    {
+        // TODO: Implement proper alignment system
+        // For now, return neutral as default
+        return Alignment.Neutral;
+    }
+    
+    /// <summary>
+    /// Internal method for equipment manager to set equipment
+    /// </summary>
+    /// <param name="slot">Equipment slot</param>
+    /// <param name="item">Item to equip (null to unequip)</param>
+    internal void SetEquippedItem(EquipmentSlot slot, WorldObject? item)
+    {
+        _equipment[slot] = item;
     }
 
     public override bool Equals(object? obj)

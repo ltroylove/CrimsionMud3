@@ -1,6 +1,7 @@
 using C3Mud.Core.Networking;
 using C3Mud.Core.Players.Models;
 using C3Mud.Core.World.Models;
+using C3Mud.Core.Characters.Models;
 
 namespace C3Mud.Core.Players;
 
@@ -143,6 +144,18 @@ public interface IPlayer
     /// </summary>
     /// <returns>List of items in inventory</returns>
     List<WorldObject> GetInventory();
+    
+    /// <summary>
+    /// Get player's character class
+    /// </summary>
+    /// <returns>Character class</returns>
+    CharacterClass GetCharacterClass();
+    
+    /// <summary>
+    /// Get player's alignment
+    /// </summary>
+    /// <returns>Character alignment</returns>
+    Alignment GetAlignment();
     
     /// <summary>
     /// Legacy player file data containing all character statistics

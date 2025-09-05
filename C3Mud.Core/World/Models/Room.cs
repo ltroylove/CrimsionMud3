@@ -84,6 +84,12 @@ public class Room
     public List<WorldObject> Objects { get; set; } = new List<WorldObject>();
     
     /// <summary>
+    /// Alias for Objects - items currently in this room
+    /// Provided for equipment system compatibility
+    /// </summary>
+    public List<WorldObject> Items => Objects;
+    
+    /// <summary>
     /// Features that can be examined in detail (e.g., "walls", "floor")
     /// </summary>
     public Dictionary<string, string> ExaminableFeatures { get; set; } = new Dictionary<string, string>();
