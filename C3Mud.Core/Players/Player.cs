@@ -119,6 +119,11 @@ public class Player : IPlayer, ICharacter
         return _equipment.GetValueOrDefault(slot);
     }
 
+    public Dictionary<EquipmentSlot, WorldObject?> GetEquipment()
+    {
+        return new Dictionary<EquipmentSlot, WorldObject?>(_equipment);
+    }
+
     public int GetSkillLevel(string skillName)
     {
         // TODO: Implement skill system

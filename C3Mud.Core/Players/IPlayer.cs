@@ -133,6 +133,12 @@ public interface IPlayer
     WorldObject? GetEquippedItem(EquipmentSlot slot);
     
     /// <summary>
+    /// Get all equipped items as a dictionary
+    /// </summary>
+    /// <returns>Dictionary of equipment slot to equipped item</returns>
+    Dictionary<EquipmentSlot, WorldObject?> GetEquipment();
+    
+    /// <summary>
     /// Get skill level for a specific skill
     /// </summary>
     /// <param name="skillName">Name of the skill</param>
