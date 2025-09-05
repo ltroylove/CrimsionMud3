@@ -9,21 +9,19 @@ namespace C3Mud.Core.Commands.Equipment;
 /// </summary>
 public class InventoryCommand : BaseCommand
 {
-    private readonly IInventoryManager _inventoryManager;
-
     public override string Name => "inventory";
     public override string[] Aliases => new[] { "i", "inv" };
     public override PlayerPosition MinimumPosition => PlayerPosition.Sleeping;
     public override int MinimumLevel => 1;
 
-    public InventoryCommand(IInventoryManager inventoryManager)
+    public InventoryCommand()
     {
-        _inventoryManager = inventoryManager ?? throw new ArgumentNullException(nameof(inventoryManager));
     }
 
     public override async Task ExecuteAsync(IPlayer player, string arguments, int commandId)
     {
-        var inventoryDisplay = _inventoryManager.GetInventoryDisplay();
+        var inventoryManager = new InventoryManager(player);
+        var inventoryDisplay = inventoryManager.GetInventoryDisplay();
         await SendToPlayerAsync(player, inventoryDisplay);
     }
 }

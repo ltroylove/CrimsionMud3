@@ -9,21 +9,19 @@ namespace C3Mud.Core.Commands.Equipment;
 /// </summary>
 public class EquipmentCommand : BaseCommand
 {
-    private readonly IEquipmentManager _equipmentManager;
-
     public override string Name => "equipment";
     public override string[] Aliases => new[] { "eq", "equ" };
     public override PlayerPosition MinimumPosition => PlayerPosition.Sleeping;
     public override int MinimumLevel => 1;
 
-    public EquipmentCommand(IEquipmentManager equipmentManager)
+    public EquipmentCommand()
     {
-        _equipmentManager = equipmentManager ?? throw new ArgumentNullException(nameof(equipmentManager));
     }
 
     public override async Task ExecuteAsync(IPlayer player, string arguments, int commandId)
     {
-        var equipmentDisplay = _equipmentManager.GetEquipmentDisplay();
+        var equipmentManager = new EquipmentManager(player);
+        var equipmentDisplay = equipmentManager.GetEquipmentDisplay();
         await SendToPlayerAsync(player, equipmentDisplay);
     }
 }

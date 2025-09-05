@@ -10,16 +10,13 @@ namespace C3Mud.Core.Commands.Equipment;
 /// </summary>
 public class RemoveCommand : BaseCommand
 {
-    private readonly IEquipmentManager _equipmentManager;
-
     public override string Name => "remove";
     public override string[] Aliases => new[] { "unwield", "unwear" };
     public override PlayerPosition MinimumPosition => PlayerPosition.Standing;
     public override int MinimumLevel => 1;
 
-    public RemoveCommand(IEquipmentManager equipmentManager)
+    public RemoveCommand()
     {
-        _equipmentManager = equipmentManager ?? throw new ArgumentNullException(nameof(equipmentManager));
     }
 
     public override async Task ExecuteAsync(IPlayer player, string arguments, int commandId)
@@ -52,7 +49,8 @@ public class RemoveCommand : BaseCommand
         }
 
         // Use equipment manager to unequip the item
-        var result = _equipmentManager.UnequipItem(targetSlot.Value);
+        var equipmentManager = new EquipmentManager(player);
+        var result = equipmentManager.UnequipItem(targetSlot.Value);
         
         await SendToPlayerAsync(player, result.Message);
     }

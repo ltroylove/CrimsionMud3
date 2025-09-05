@@ -11,7 +11,6 @@ namespace C3Mud.Core.Commands.Equipment;
 /// </summary>
 public class WearCommand : BaseCommand
 {
-    private readonly IEquipmentManager _equipmentManager;
     private readonly IWorldDatabase _worldDatabase;
 
     public override string Name => "wear";
@@ -19,9 +18,8 @@ public class WearCommand : BaseCommand
     public override PlayerPosition MinimumPosition => PlayerPosition.Standing;
     public override int MinimumLevel => 1;
 
-    public WearCommand(IEquipmentManager equipmentManager, IWorldDatabase worldDatabase)
+    public WearCommand(IWorldDatabase worldDatabase)
     {
-        _equipmentManager = equipmentManager ?? throw new ArgumentNullException(nameof(equipmentManager));
         _worldDatabase = worldDatabase ?? throw new ArgumentNullException(nameof(worldDatabase));
     }
 
@@ -51,8 +49,9 @@ public class WearCommand : BaseCommand
             return;
         }
 
-        // Use equipment manager to equip the item
-        var result = _equipmentManager.EquipItem(item, slot.Value);
+        // Create equipment manager with current player context
+        var equipmentManager = new EquipmentManager(player);
+        var result = equipmentManager.EquipItem(item, slot.Value);
         
         await SendToPlayerAsync(player, result.Message);
     }
